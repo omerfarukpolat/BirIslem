@@ -1,3 +1,7 @@
-# https://www.robotstxt.org/robotstxt.html
+# Bir İşlem - Matematik Zeka Oyunu
+# https://www.birislem.app
+
 User-agent: *
-Disallow:
+Allow: /
+
+Sitemap: https://www.birislem.app/sitemap.xml

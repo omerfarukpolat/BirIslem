@@ -1,7 +1,11 @@
 {
-  "name": "untitled2",
-  "version": "0.1.0",
+  "name": "bir-islem",
+  "version": "1.0.0",
   "private": true,
+  "description": "Bir İşlem - Matematik Zeka Oyunu. 5 küçük sayı ve 1 büyük sayı ile hedef sayıya ulaşmaya çalışın.",
+  "keywords": ["matematik", "zeka oyunu", "bir işlem", "sayı oyunu", "matematik oyunu"],
+  "author": "Bir İşlem",
+  "homepage": "https://www.birislem.app",
   "dependencies": {
     "@testing-library/dom": "^10.4.0",
     "@testing-library/jest-dom": "^6.6.3",
