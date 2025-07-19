@@ -4,8 +4,10 @@ service cloud.firestore {
   match /databases/{database}/documents {
     // Scores koleksiyonu için kurallar
     match /scores/{document} {
-      // Giriş yapmış kullanıcılar okuyabilir ve yazabilir
-      allow read, write: if request.auth != null;
+      // Herkes okuyabilir (leaderboard için)
+      allow read: if true;
+      // Sadece giriş yapmış kullanıcılar yazabilir
+      allow write: if request.auth != null;
     }
     
     // Diğer koleksiyonlar için varsayılan kural - erişim yok
