@@ -366,7 +366,7 @@ const GameScreen: React.FC = () => {
       <div className="main-game-area">
         <div className="left-panel">
           <div className="numbers-operators-section">
-            <h3>Sayılar ve İşlemler:</h3>
+            <h3>Sayılar ve İşlemler (Hedef Sayı: {gameState.target}):</h3>
             <div className="numbers-row">
               {allNumbers.map((number, index) => (
                 <button
