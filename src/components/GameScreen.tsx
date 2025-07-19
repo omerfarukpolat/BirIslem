@@ -9,7 +9,7 @@ import './GameScreen.css';
 const GameScreen: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser } = useAuth();
+  const { currentUser, signOut } = useAuth();
   const { 
     gameState, 
     startGame, 
@@ -28,6 +28,16 @@ const GameScreen: React.FC = () => {
 
   // Oyun bittiğinde butonları disable et
   const isGameOver = !gameState.isGameActive || gameState.timeLeft <= 0;
+
+  // Çıkış yap ve ana sayfaya yönlendir
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      navigate('/');
+    } catch (error) {
+      console.error('Çıkış yapılırken hata:', error);
+    }
+  };
 
   // Oyunu başlat
   useEffect(() => {
@@ -339,6 +349,41 @@ const GameScreen: React.FC = () => {
             {formatTime(gameState.timeLeft)}
           </div>
         </div>
+        <div className="user-section">
+          <div className="user-info">
+            {currentUser ? (
+              <>
+                <div className="user-avatar">
+                  {currentUser.photoURL ? (
+                    <img src={currentUser.photoURL} alt={currentUser.displayName} />
+                  ) : (
+                    <div className="avatar-placeholder">
+                      {currentUser.displayName.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </div>
+                <div className="user-details">
+                  <span className="user-name">{currentUser.displayName}</span>
+                  <span className="user-email">{currentUser.email}</span>
+                </div>
+                <button className="sign-out-button" onClick={handleSignOut}>
+                  Çıkış Yap
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="user-avatar">
+                  <div className="avatar-placeholder">
+                    ?
+                  </div>
+                </div>
+                <div className="user-details">
+                  <span className="user-name">Giriş Yapılmamış</span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
       </div>
 
       <div className="results-section">
@@ -494,18 +539,16 @@ const GameScreen: React.FC = () => {
         </div>
 
         <div className="right-panel">
-          {gameState.bestCalculationHistory.length > 0 && (
             <div className="history-section">
               <h3>En İyi Sonuç İşlem Geçmişi:</h3>
               <div className="history-list">
-                {gameState.bestCalculationHistory.map((step, index) => (
+                {gameState.bestCalculationHistory.length > 0 && gameState.bestCalculationHistory.map((step, index) => (
                   <div key={index} className="history-item">
                     {step.firstNumber} {getOperatorSymbol(step.operator)} {step.secondNumber} = {step.result}
                   </div>
                 ))}
               </div>
             </div>
-          )}
         </div>
       </div>
     </div>

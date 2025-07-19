@@ -7,8 +7,9 @@
 }
 
 .game-header {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px;
   align-items: center;
   background: rgba(255, 255, 255, 0.95);
   border-radius: 15px;
@@ -26,14 +27,14 @@
 .target-number {
   color: #e74c3c;
   font-weight: 900;
-  font-size: 4rem;
+  font-size: 3rem;
   text-shadow: 3px 3px 6px rgba(231, 76, 60, 0.3);
   animation: target-pulse 2s ease-in-out infinite;
   font-family: 'Courier New', monospace;
   letter-spacing: 2px;
   border: 4px solid #e74c3c;
   border-radius: 15px;
-  padding: 15px 25px;
+  padding: 10px 20px;
   background: rgba(231, 76, 60, 0.1);
   box-shadow: 0 8px 25px rgba(231, 76, 60, 0.2);
   -webkit-font-smoothing: antialiased;
@@ -85,6 +86,102 @@
     transform: scale(1.1);
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
   }
+}
+
+.user-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+  width: 100%;
+}
+
+.user-avatar {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #3498db;
+  box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+  background: #ecf0f1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #7f8c8d;
+  background: linear-gradient(45deg, #ecf0f1, #bdc3c7);
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.user-name {
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+.user-email {
+  font-size: 0.85rem;
+  color: #7f8c8d;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sign-out-button {
+  background: linear-gradient(45deg, #e74c3c, #c0392b);
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-size: 0.85rem;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(231, 76, 60, 0.3);
+  margin-top: 5px;
+}
+
+.sign-out-button:hover:not(:disabled) {
+  background: linear-gradient(45deg, #c0392b, #a93226);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(231, 76, 60, 0.4);
+}
+
+.sign-out-button:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .results-section {
@@ -494,7 +591,7 @@
 
 @media (max-width: 768px) {
   .game-header {
-    flex-direction: column;
+    grid-template-columns: 1fr;
     gap: 15px;
   }
   
@@ -506,6 +603,33 @@
   
   .timer {
     font-size: 2rem;
+  }
+  
+  .user-section {
+    order: -1;
+  }
+  
+  .user-avatar {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .avatar-placeholder {
+    font-size: 1.2rem;
+  }
+  
+  .user-name {
+    font-size: 1rem;
+  }
+  
+  .user-email {
+    font-size: 0.8rem;
+    max-width: 120px;
+  }
+  
+  .sign-out-button {
+    padding: 6px 16px;
+    font-size: 0.8rem;
   }
   
   .results-section {
