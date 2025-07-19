@@ -1,46 +1,132 @@
-# Getting Started with Create React App
+# Bir İşlem - Matematik Oyunu
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Bu proje, kullanıcıların verilen sayılarla matematik işlemleri yaparak hedef sayıya ulaşmaya çalıştığı bir oyundur.
 
-## Available Scripts
+## 🚀 Kurulum
 
-In the project directory, you can run:
+### Gereksinimler
+- Node.js (v14 veya üzeri)
+- npm veya yarn
 
-### `npm start`
+### Adımlar
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+1. **Projeyi klonlayın:**
+```bash
+git clone https://github.com/your-username/birislem.git
+cd birislem
+```
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+2. **Bağımlılıkları yükleyin:**
+```bash
+npm install
+```
 
-### `npm test`
+3. **Environment variables ayarlayın:**
+```bash
+# .env dosyası oluşturun
+cp .env.example .env
+```
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+4. **Firebase konfigürasyonunu ayarlayın:**
+`.env` dosyasını açın ve Firebase projenizin bilgilerini girin:
 
-### `npm run build`
+```env
+REACT_APP_FIREBASE_API_KEY=your_api_key_here
+REACT_APP_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+REACT_APP_FIREBASE_PROJECT_ID=your_project_id
+REACT_APP_FIREBASE_STORAGE_BUCKET=your_project_id.firebasestorage.app
+REACT_APP_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+REACT_APP_FIREBASE_APP_ID=your_app_id
+REACT_APP_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+5. **Uygulamayı başlatın:**
+```bash
+npm start
+```
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Uygulama [http://localhost:3000](http://localhost:3000) adresinde açılacaktır.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## 🔥 Firebase Kurulumu
 
-### `npm run eject`
+### 1. Firebase Projesi Oluşturun
+1. [Firebase Console](https://console.firebase.google.com/)'a gidin
+2. "Add project" butonuna tıklayın
+3. Proje adını girin (örn: "birislem")
+4. Google Analytics'i etkinleştirin (opsiyonel)
+5. "Create project" butonuna tıklayın
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+### 2. Web Uygulaması Ekleyin
+1. Firebase Console'da projenizi seçin
+2. "Add app" butonuna tıklayın
+3. Web simgesini seçin
+4. Uygulama adını girin
+5. "Register app" butonuna tıklayın
+6. Konfigürasyon bilgilerini kopyalayın
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 3. Authentication Ayarlayın
+1. Sol menüden "Authentication" seçin
+2. "Get started" butonuna tıklayın
+3. "Sign-in method" sekmesine gidin
+4. "Google" sağlayıcısını etkinleştirin
+5. Proje destek e-postasını seçin
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+### 4. Firestore Database Ayarlayın
+1. Sol menüden "Firestore Database" seçin
+2. "Create database" butonuna tıklayın
+3. "Start in test mode" seçin (geliştirme için)
+4. Veritabanı konumunu seçin
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+### 5. Security Rules Ayarlayın
+Firestore Database → Rules sekmesinde şu kuralları ekleyin:
 
-## Learn More
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /scores/{document} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## 📦 Deployment
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+### Vercel ile Deploy
+1. [Vercel](https://vercel.com/)'e gidin
+2. GitHub hesabınızı bağlayın
+3. Projeyi import edin
+4. Environment variables'ları Vercel dashboard'da ayarlayın
+5. Deploy edin
+
+### Environment Variables (Vercel)
+Vercel dashboard'da şu environment variables'ları ekleyin:
+- `REACT_APP_FIREBASE_API_KEY`
+- `REACT_APP_FIREBASE_AUTH_DOMAIN`
+- `REACT_APP_FIREBASE_PROJECT_ID`
+- `REACT_APP_FIREBASE_STORAGE_BUCKET`
+- `REACT_APP_FIREBASE_MESSAGING_SENDER_ID`
+- `REACT_APP_FIREBASE_APP_ID`
+- `REACT_APP_FIREBASE_MEASUREMENT_ID`
+
+## 🎮 Oyun Özellikleri
+
+- **6 sayı ile hedef sayıya ulaşma**
+- **4 matematik işlemi** (+, -, ×, ÷)
+- **2 dakikalık süre sınırı**
+- **Google ile giriş yapma**
+- **Skor kaydetme ve sıralama**
+- **Günlük, haftalık, aylık leaderboard**
+
+## 🛠️ Teknolojiler
+
+- React 18
+- TypeScript
+- Firebase (Auth, Firestore)
+- React Router
+- CSS3
+
+## 📝 Lisans
+
+Bu proje MIT lisansı altında lisanslanmıştır.

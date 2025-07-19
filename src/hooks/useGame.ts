@@ -1,13 +1,17 @@
 import { useState, useEffect, useCallback } from 'react';
-import { GameState, GameResult, CalculationStep } from '../types/game';
+import { GameState, GameResult, CalculationStep, NumberWithId } from '../types/game';
 import { initializeGame, evaluateExpression, calculateScore, calculateResult } from '../utils/gameLogic';
 
 export const useGame = () => {
+  // Normal oyun süresi: 120 saniye (2 dakika)
+  const GAME_DURATION = 120; // Normal süre: 120 saniye
+  
+  console.log('useGame başlatıldı, GAME_DURATION:', GAME_DURATION);
+  
   const [gameState, setGameState] = useState<GameState>({
-    currentScreen: 'intro',
     numbers: [],
     target: 0,
-    timeLeft: 120,
+    timeLeft: GAME_DURATION,
     score: 0,
     userExpression: '',
     userResult: null,
@@ -18,7 +22,8 @@ export const useGame = () => {
     closestResult: null,
     closestDifference: null,
     bestCalculationHistory: [],
-    bestResult: null
+    bestResult: null,
+    usedNumbers: []
   });
 
   // Timer effect
@@ -34,14 +39,15 @@ export const useGame = () => {
             // Süre doldu, oyunu bitir
             const finalResult = prev.closestResult || prev.currentResult;
             const finalScore = finalResult 
-              ? calculateScore(prev.target, finalResult, 120 - newTimeLeft)
+              ? calculateScore(prev.target, finalResult, GAME_DURATION)
               : 0;
+            
+            console.log('Oyun bitti! Final result:', finalResult, 'Score:', finalScore);
             
             return {
               ...prev,
               timeLeft: 0,
               isGameActive: false,
-              currentScreen: 'result',
               userResult: finalResult,
               score: finalScore
             };
@@ -64,16 +70,27 @@ export const useGame = () => {
 
   // Oyunu başlat
   const startGame = useCallback(() => {
+    console.log('Oyun başlatılıyor, GAME_DURATION:', GAME_DURATION);
     const newGame = initializeGame();
+    const availableNumbersWithIds: NumberWithId[] = newGame.numbers.map((num, index) => ({
+      id: `original-${index}`,
+      value: num,
+      isOriginal: true
+    }));
+    
+    console.log('initializeGame timeLeft:', newGame.timeLeft, 'GAME_DURATION ile override ediliyor');
+    
     setGameState({
       ...newGame,
-      availableNumbers: [...newGame.numbers],
+      timeLeft: GAME_DURATION, // GAME_DURATION ile override et
+      availableNumbers: availableNumbersWithIds,
       currentResult: null,
       calculationHistory: [],
       closestResult: null,
       closestDifference: null,
       bestCalculationHistory: [],
-      bestResult: null
+      bestResult: null,
+      usedNumbers: []
     });
   }, []);
 
@@ -88,13 +105,22 @@ export const useGame = () => {
         result
       };
       
-      // Kullanılan sayıları listeden çıkar
-      const newAvailableNumbers = prev.availableNumbers.filter(num => 
-        num !== firstNumber && num !== secondNumber
-      );
+      // Kullanılan sayıların ID'lerini bul
+      const firstNumberId = prev.availableNumbers.find(num => num.value === firstNumber)?.id;
+      const secondNumberId = prev.availableNumbers.find(num => num.value === secondNumber)?.id;
       
-      // Sonucu kullanılabilir sayılara ekle
-      newAvailableNumbers.push(result);
+      // Kullanılan sayıları usedNumbers'a ekle
+      const newUsedNumbers = [...prev.usedNumbers];
+      if (firstNumberId) newUsedNumbers.push(firstNumberId);
+      if (secondNumberId) newUsedNumbers.push(secondNumberId);
+      
+      // Sonucu her zaman kullanılabilir sayılara ekle
+      const newNumberId = `calculated-${Date.now()}-${Math.random()}`;
+      const newAvailableNumbers = [...prev.availableNumbers, {
+        id: newNumberId,
+        value: result,
+        isOriginal: false
+      }];
       
       // En yakın sonucu güncelle
       const currentDifference = Math.abs(prev.target - result);
@@ -118,6 +144,7 @@ export const useGame = () => {
         currentResult: result,
         calculationHistory: [...prev.calculationHistory, newStep],
         availableNumbers: newAvailableNumbers,
+        usedNumbers: newUsedNumbers,
         closestResult: newClosestResult,
         closestDifference: newClosestDifference,
         bestResult: newBestResult,
@@ -134,9 +161,14 @@ export const useGame = () => {
       const lastStep = prev.calculationHistory[prev.calculationHistory.length - 1];
       const newHistory = prev.calculationHistory.slice(0, -1);
       
-      // Kullanılan sayıları geri ekle, sonucu çıkar
-      const newAvailableNumbers = prev.availableNumbers.filter(num => num !== lastStep.result);
-      newAvailableNumbers.push(lastStep.firstNumber, lastStep.secondNumber);
+      // Sonucu her zaman çıkar
+      const newAvailableNumbers = prev.availableNumbers.filter(num => num.value !== lastStep.result);
+      
+      // Kullanılan sayıları usedNumbers'dan çıkar
+      const newUsedNumbers = prev.usedNumbers.filter(id => {
+        const num = prev.availableNumbers.find(n => n.id === id);
+        return num && num.value !== lastStep.firstNumber && num.value !== lastStep.secondNumber;
+      });
       
       // Yeni current result'ı belirle
       const newCurrentResult = newHistory.length > 0 
@@ -167,6 +199,7 @@ export const useGame = () => {
         currentResult: newCurrentResult,
         calculationHistory: newHistory,
         availableNumbers: newAvailableNumbers,
+        usedNumbers: newUsedNumbers,
         closestResult: newClosestResult,
         closestDifference: newClosestDifference,
         bestResult: newBestResult,
@@ -177,36 +210,36 @@ export const useGame = () => {
 
   // Tüm işlemleri temizle
   const clearAllCalculations = useCallback(() => {
-    setGameState(prev => ({
-      ...prev,
-      currentResult: null,
-      calculationHistory: [],
-      availableNumbers: [...prev.numbers]
-    }));
+    setGameState(prev => {
+      const originalNumbersWithIds: NumberWithId[] = prev.numbers.map((num, index) => ({
+        id: `original-${index}`,
+        value: num,
+        isOriginal: true
+      }));
+      
+      return {
+        ...prev,
+        currentResult: null,
+        calculationHistory: [],
+        availableNumbers: originalNumbersWithIds,
+        usedNumbers: []
+      };
+    });
   }, []);
 
   // Sonucu hesapla ve oyunu bitir
   const submitResult = useCallback(() => {
     const finalResult = gameState.closestResult || gameState.currentResult;
-    const timeUsed = 120 - gameState.timeLeft;
+    const timeUsed = GAME_DURATION - gameState.timeLeft;
     const score = finalResult ? calculateScore(gameState.target, finalResult, timeUsed) : 0;
 
     setGameState(prev => ({
       ...prev,
       isGameActive: false,
-      currentScreen: 'result',
       userResult: finalResult,
       score
     }));
   }, [gameState.closestResult, gameState.currentResult, gameState.target, gameState.timeLeft]);
-
-  // Ana menüye dön
-  const goToIntro = useCallback(() => {
-    setGameState(prev => ({
-      ...prev,
-      currentScreen: 'intro'
-    }));
-  }, []);
 
   return {
     gameState,
@@ -214,7 +247,6 @@ export const useGame = () => {
     performCalculation,
     undoLastStep,
     clearAllCalculations,
-    submitResult,
-    goToIntro
+    submitResult
   };
 }; 

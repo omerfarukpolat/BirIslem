@@ -1,68 +1,29 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
-import { useGame } from './hooks/useGame';
+import { AuthProvider } from './contexts/AuthContext';
+import ScrollToTop from './components/ScrollToTop';
 import IntroScreen from './components/IntroScreen';
 import GameScreen from './components/GameScreen';
 import ResultScreen from './components/ResultScreen';
+import LeaderboardScreen from './components/LeaderboardScreen';
 
 function App() {
-  const { 
-    gameState, 
-    startGame, 
-    performCalculation, 
-    undoLastStep, 
-    clearAllCalculations, 
-    submitResult, 
-    goToIntro 
-  } = useGame();
-
-  const renderScreen = () => {
-    switch (gameState.currentScreen) {
-      case 'intro':
-        return <IntroScreen onStartGame={startGame} />;
-      
-      case 'game':
-        return (
-          <GameScreen
-            numbers={gameState.numbers}
-            target={gameState.target}
-            timeLeft={gameState.timeLeft}
-            availableNumbers={gameState.availableNumbers}
-            currentResult={gameState.currentResult}
-            calculationHistory={gameState.calculationHistory}
-            closestResult={gameState.closestResult}
-            closestDifference={gameState.closestDifference}
-            bestCalculationHistory={gameState.bestCalculationHistory}
-            onPerformCalculation={performCalculation}
-            onUndoLastStep={undoLastStep}
-            onClearAllCalculations={clearAllCalculations}
-            onSubmitResult={submitResult}
-          />
-        );
-      
-      case 'result':
-        return (
-          <ResultScreen
-            target={gameState.target}
-            userResult={gameState.userResult}
-            score={gameState.score}
-            timeUsed={120 - gameState.timeLeft}
-            expression={gameState.userExpression}
-            calculationHistory={gameState.bestCalculationHistory}
-            onPlayAgain={startGame}
-            onGoToIntro={goToIntro}
-          />
-        );
-      
-      default:
-        return <IntroScreen onStartGame={startGame} />;
-    }
-  };
-
   return (
-    <div className="App">
-      {renderScreen()}
-    </div>
+    <AuthProvider>
+      <Router>
+        <ScrollToTop />
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<IntroScreen />} />
+            <Route path="/game" element={<GameScreen />} />
+            <Route path="/result" element={<ResultScreen />} />
+            <Route path="/leaderboard" element={<LeaderboardScreen />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

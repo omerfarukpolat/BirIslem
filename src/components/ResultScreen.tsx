@@ -1,27 +1,50 @@
 import React from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 import './ResultScreen.css';
 
-interface ResultScreenProps {
+interface ResultData {
   target: number;
   userResult: number | null;
   score: number;
   timeUsed: number;
   expression: string;
   calculationHistory: any[];
-  onPlayAgain: () => void;
-  onGoToIntro: () => void;
+  isLoggedIn?: boolean;
 }
 
-const ResultScreen: React.FC<ResultScreenProps> = ({
-  target,
-  userResult,
-  score,
-  timeUsed,
-  expression,
-  calculationHistory,
-  onPlayAgain,
-  onGoToIntro
-}) => {
+const ResultScreen: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { currentUser, signIn } = useAuth();
+  const resultData = location.state as ResultData;
+
+  // Eğer result data yoksa ana sayfaya yönlendir
+  if (!resultData) {
+    navigate('/');
+    return null;
+  }
+
+  const { target, userResult, score, timeUsed, expression, calculationHistory, isLoggedIn } = resultData;
+
+  const handlePlayAgain = () => {
+    navigate('/game');
+  };
+
+  const handleGoToIntro = () => {
+    navigate('/');
+  };
+
+  const handleSignIn = async () => {
+    try {
+      await signIn();
+      // Giriş yaptıktan sonra leaderboard'a yönlendir
+      navigate('/leaderboard');
+    } catch (error) {
+      console.error('Giriş yapılırken hata:', error);
+    }
+  };
+
   const formatTime = (seconds: number): string => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -71,6 +94,34 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
             </div>
           </div>
 
+          {/* Giriş yapmamış kullanıcılar için özel mesaj */}
+          {!currentUser && (
+            <div className="login-notice">
+              <div className="notice-icon">🏆</div>
+              <div className="notice-content">
+                <h3>Skorunuzu Kaydetmek İster misiniz?</h3>
+                <p>Giriş yaparak skorunuzu kaydedebilir ve sıralamalarda yer alabilirsiniz!</p>
+                <button className="signin-notice-button" onClick={handleSignIn}>
+                  Google ile Giriş Yap
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Giriş yapmış kullanıcılar için skor kaydedildi mesajı */}
+          {currentUser && (
+            <div className="score-saved-notice">
+              <div className="notice-icon">✅</div>
+              <div className="notice-content">
+                <h3>Skorunuz Kaydedildi!</h3>
+                <p>Sıralamalarda yer almak için leaderboard'u kontrol edin.</p>
+                <button className="leaderboard-notice-button" onClick={() => navigate('/leaderboard')}>
+                  Sıralamayı Görüntüle
+                </button>
+              </div>
+            </div>
+          )}
+
           <div className="result-details">
             <div className="detail-row">
               <span className="detail-label">Hedef:</span>
@@ -114,10 +165,10 @@ const ResultScreen: React.FC<ResultScreenProps> = ({
           </div>
 
           <div className="action-buttons">
-            <button className="play-again-button" onClick={onPlayAgain}>
+            <button className="play-again-button" onClick={handlePlayAgain}>
               Tekrar Oyna
             </button>
-            <button className="intro-button" onClick={onGoToIntro}>
+            <button className="intro-button" onClick={handleGoToIntro}>
               Ana Menü
             </button>
           </div>

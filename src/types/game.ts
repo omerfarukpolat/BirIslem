@@ -1,5 +1,10 @@
+export interface NumberWithId {
+  id: string;
+  value: number;
+  isOriginal: boolean;
+}
+
 export interface GameState {
-  currentScreen: 'intro' | 'game' | 'result';
   numbers: number[];
   target: number;
   timeLeft: number;
@@ -7,13 +12,14 @@ export interface GameState {
   userExpression: string;
   userResult: number | null;
   isGameActive: boolean;
-  availableNumbers: number[]; // Kullanılabilir sayılar
+  availableNumbers: NumberWithId[]; // Kullanılabilir sayılar (benzersiz ID'lerle)
   currentResult: number | null; // Mevcut ara sonuç
   calculationHistory: CalculationStep[]; // İşlem geçmişi
   closestResult: number | null; // En yakın sonuç
   closestDifference: number | null; // En yakın sonucun hedeften farkı
   bestCalculationHistory: CalculationStep[]; // En iyi sonuca ulaşılan işlem geçmişi
   bestResult: number | null; // En iyi sonuç
+  usedNumbers: string[]; // Kullanılmış sayıların ID'leri
 }
 
 export interface CalculationStep {

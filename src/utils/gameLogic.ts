@@ -70,7 +70,7 @@ export const initializeGame = () => {
   return {
     numbers,
     target,
-    timeLeft: 120, // 2 dakika
+    timeLeft: 10, // Test için 10 saniye (normal: 120)
     score: 0,
     userExpression: '',
     userResult: null,
