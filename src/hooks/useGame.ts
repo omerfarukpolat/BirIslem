@@ -1,12 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { GameState, GameResult, CalculationStep, NumberWithId } from '../types/game';
 import { initializeGame, evaluateExpression, calculateScore, calculateResult } from '../utils/gameLogic';
 
 export const useGame = () => {
   // Normal oyun süresi: 120 saniye (2 dakika)
-  const GAME_DURATION = 120; // Normal süre: 120 saniye
-  
-  console.log('useGame başlatıldı, GAME_DURATION:', GAME_DURATION);
+  const GAME_DURATION = useMemo(() => 120, []); // Normal süre: 120 saniye
   
   const [gameState, setGameState] = useState<GameState>({
     numbers: [],
@@ -42,8 +40,6 @@ export const useGame = () => {
               ? calculateScore(prev.target, finalResult, GAME_DURATION)
               : 0;
             
-            console.log('Oyun bitti! Final result:', finalResult, 'Score:', finalScore);
-            
             return {
               ...prev,
               timeLeft: 0,
@@ -66,19 +62,16 @@ export const useGame = () => {
         clearInterval(interval);
       }
     };
-  }, [gameState.isGameActive, gameState.timeLeft]);
+  }, [gameState.isGameActive, gameState.timeLeft, GAME_DURATION]);
 
   // Oyunu başlat
   const startGame = useCallback(() => {
-    console.log('Oyun başlatılıyor, GAME_DURATION:', GAME_DURATION);
     const newGame = initializeGame();
     const availableNumbersWithIds: NumberWithId[] = newGame.numbers.map((num, index) => ({
       id: `original-${index}`,
       value: num,
       isOriginal: true
     }));
-    
-    console.log('initializeGame timeLeft:', newGame.timeLeft, 'GAME_DURATION ile override ediliyor');
     
     setGameState({
       ...newGame,
@@ -92,10 +85,10 @@ export const useGame = () => {
       bestResult: null,
       usedNumbers: []
     });
-  }, []);
+  }, [GAME_DURATION]);
 
   // İki sayı arasında işlem yap
-  const performCalculation = useCallback((firstNumber: number, secondNumber: number, operator: string) => {
+  const performCalculation = useCallback((firstNumber: number, secondNumber: number, operator: string, firstNumberId?: string, secondNumberId?: string) => {
     setGameState(prev => {
       const result = calculateResult(firstNumber, secondNumber, operator as any);
       const newStep: CalculationStep = {
@@ -105,14 +98,14 @@ export const useGame = () => {
         result
       };
       
-      // Kullanılan sayıların ID'lerini bul
-      const firstNumberId = prev.availableNumbers.find(num => num.value === firstNumber)?.id;
-      const secondNumberId = prev.availableNumbers.find(num => num.value === secondNumber)?.id;
+      // Kullanılan sayıların ID'lerini bul (eğer parametre olarak verilmemişse)
+      const firstId = firstNumberId || prev.availableNumbers.find(num => num.value === firstNumber)?.id;
+      const secondId = secondNumberId || prev.availableNumbers.find(num => num.value === secondNumber)?.id;
       
       // Kullanılan sayıları usedNumbers'a ekle
       const newUsedNumbers = [...prev.usedNumbers];
-      if (firstNumberId) newUsedNumbers.push(firstNumberId);
-      if (secondNumberId) newUsedNumbers.push(secondNumberId);
+      if (firstId) newUsedNumbers.push(firstId);
+      if (secondId) newUsedNumbers.push(secondId);
       
       // Sonucu her zaman kullanılabilir sayılara ekle
       const newNumberId = `calculated-${Date.now()}-${Math.random()}`;
@@ -161,8 +154,23 @@ export const useGame = () => {
       const lastStep = prev.calculationHistory[prev.calculationHistory.length - 1];
       const newHistory = prev.calculationHistory.slice(0, -1);
       
-      // Sonucu her zaman çıkar
-      const newAvailableNumbers = prev.availableNumbers.filter(num => num.value !== lastStep.result);
+      // Sonucu her zaman çıkar (en son eklenen calculated number)
+      const newAvailableNumbers = prev.availableNumbers.filter(num => {
+        // En son eklenen calculated number'ı çıkar
+        if (!num.isOriginal && num.value === lastStep.result) {
+          // Aynı değere sahip birden fazla calculated number varsa sadece en sonunu çıkar
+          const calculatedNumbersWithSameValue = prev.availableNumbers.filter(n => 
+            !n.isOriginal && n.value === lastStep.result
+          );
+          if (calculatedNumbersWithSameValue.length > 1) {
+            // En son eklenen calculated number'ı bul ve çıkar
+            const lastCalculatedNumber = calculatedNumbersWithSameValue[calculatedNumbersWithSameValue.length - 1];
+            return num.id !== lastCalculatedNumber.id;
+          }
+          return false; // Tek calculated number varsa çıkar
+        }
+        return true;
+      });
       
       // Kullanılan sayıları usedNumbers'dan çıkar
       const newUsedNumbers = prev.usedNumbers.filter(id => {
@@ -239,7 +247,7 @@ export const useGame = () => {
       userResult: finalResult,
       score
     }));
-  }, [gameState.closestResult, gameState.currentResult, gameState.target, gameState.timeLeft]);
+  }, [gameState.closestResult, gameState.currentResult, gameState.target, gameState.timeLeft, GAME_DURATION]);
 
   return {
     gameState,

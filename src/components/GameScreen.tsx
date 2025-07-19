@@ -161,7 +161,8 @@ const GameScreen: React.FC = () => {
           }
         }
         
-        performCalculation(firstNumber, secondNumber, selectedOperator);
+        // ID'leri de gönder
+        performCalculation(firstNumber, secondNumber, selectedOperator, firstNumberId || undefined, secondNumberId || undefined);
         setFirstNumber(null);
         setSelectedOperator('');
         setSecondNumber(null);
@@ -213,21 +214,35 @@ const GameScreen: React.FC = () => {
 
   // Oyun bittiğinde otomatik sonuç ekranına geçiş
   useEffect(() => {
-    console.log('Oyun durumu kontrol ediliyor:', {
-      isGameOver,
-      userResult: gameState.userResult,
-      isGameActive: gameState.isGameActive,
-      timeLeft: gameState.timeLeft
-    });
-    
     if (isGameOver) {
-      console.log('Oyun bitti, sonuç ekranına yönlendiriliyor...');
       // Kısa bir gecikme ile sonuç ekranına geç
       const timer = setTimeout(() => {
         // Final result'ı hesapla
         const finalResult = gameState.closestResult || gameState.currentResult;
         const timeUsed = 120 - gameState.timeLeft;
         const score = finalResult ? calculateScore(gameState.target, finalResult, timeUsed) : 0;
+        
+        // Skor kaydet (eğer kullanıcı giriş yapmışsa)
+        if (currentUser && finalResult !== null) {
+          const scoreData = {
+            userId: currentUser.uid,
+            userName: currentUser.displayName,
+            userEmail: currentUser.email,
+            score: score,
+            target: gameState.target,
+            userResult: finalResult,
+            timeUsed: timeUsed,
+            calculationHistory: gameState.bestCalculationHistory
+          };
+          
+          saveGameScore(scoreData)
+            .then(docId => {
+              console.log('Skor başarıyla kaydedildi, docId:', docId);
+            })
+            .catch(error => {
+              console.error('Skor kaydedilirken hata:', error);
+            });
+        }
         
         // Sonuç ekranına yönlendir
         navigate('/result', { 

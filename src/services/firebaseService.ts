@@ -67,9 +67,7 @@ export const saveGameScore = async (score: Omit<GameScore, 'id' | 'createdAt'>):
       createdAt: Timestamp.now()
     };
     
-    console.log('Skor kaydediliyor:', scoreData);
     const docRef = await addDoc(collection(db, 'scores'), scoreData);
-    console.log('Skor başarıyla kaydedildi:', docRef.id);
     return docRef.id;
   } catch (error) {
     console.error('Skor kaydedilirken hata:', error);
@@ -97,8 +95,6 @@ export const getLeaderboard = async (period: LeaderboardPeriod): Promise<Leaderb
         break;
     }
     
-    console.log(`${period} leaderboard yükleniyor, başlangıç tarihi:`, startDate);
-    
     const q = query(
       collection(db, 'scores'),
       where('createdAt', '>=', Timestamp.fromDate(startDate)),
@@ -106,8 +102,6 @@ export const getLeaderboard = async (period: LeaderboardPeriod): Promise<Leaderb
     );
     
     const querySnapshot = await getDocs(q);
-    console.log(`${querySnapshot.docs.length} skor bulundu`);
-    
     const scores = querySnapshot.docs.map(doc => doc.data() as GameScore);
     
     // Kullanıcı bazında toplam skorları hesapla
@@ -152,7 +146,6 @@ export const getLeaderboard = async (period: LeaderboardPeriod): Promise<Leaderb
     }));
     
     const sortedLeaderboard = leaderboard.sort((a, b) => b.totalScore - a.totalScore);
-    console.log(`${sortedLeaderboard.length} kullanıcı leaderboard'da`);
     return sortedLeaderboard;
   } catch (error) {
     console.error('Leaderboard yüklenirken hata:', error);
@@ -169,8 +162,6 @@ export const getUserStats = async (userId: string): Promise<{
   lastPlayed: Date | null;
 }> => {
   try {
-    console.log('Kullanıcı istatistikleri yükleniyor:', userId);
-    
     const q = query(
       collection(db, 'scores'),
       where('userId', '==', userId),
@@ -179,8 +170,6 @@ export const getUserStats = async (userId: string): Promise<{
     
     const querySnapshot = await getDocs(q);
     const scores = querySnapshot.docs.map(doc => doc.data() as GameScore);
-    
-    console.log(`${scores.length} oyun bulundu`);
     
     if (scores.length === 0) {
       return {
