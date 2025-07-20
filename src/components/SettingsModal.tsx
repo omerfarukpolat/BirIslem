@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { soundManager } from '../utils/soundEffects';
 import './SettingsModal.css';
 
 interface SettingsModalProps {
@@ -21,7 +22,34 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const [settings, setSettings] = useState<GameSettings>(currentSettings);
   const [hasChanges, setHasChanges] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(soundManager.getSoundEnabled());
   const settingsRef = useRef<GameSettings>(currentSettings);
+
+  // Ses durumunu localStorage'dan yükle
+  useEffect(() => {
+    const currentSoundState = soundManager.getSoundEnabled();
+    setSoundEnabled(currentSoundState);
+    console.log('SettingsModal: Ses durumu yüklendi:', currentSoundState);
+  }, []);
+
+  const handleTimeChange = useCallback((value: number) => {
+    setSettings(prev => ({ ...prev, timeLimit: value }));
+  }, []);
+
+  const handleOperationLimitChange = useCallback((value: number) => {
+    // State'i doğrudan güncelle
+    const newSettings = {
+      ...settingsRef.current,
+      operationLimit: value
+    };
+    setSettings(newSettings);
+  }, []);
+
+  // Ses açma/kapama
+  const handleSoundToggle = () => {
+    const newSoundState = soundManager.toggleSound();
+    setSoundEnabled(newSoundState);
+  };
 
   // Süre seçenekleri (saniye cinsinden)
   const timeOptions = [
@@ -60,19 +88,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
       settings.operationLimit !== currentSettings.operationLimit;
     setHasChanges(changed);
   }, [settings, currentSettings]);
-
-  const handleTimeChange = useCallback((value: number) => {
-    setSettings(prev => ({ ...prev, timeLimit: value }));
-  }, []);
-
-  const handleOperationLimitChange = useCallback((value: number) => {
-    // State'i doğrudan güncelle
-    const newSettings = {
-      ...settingsRef.current,
-      operationLimit: value
-    };
-    setSettings(newSettings);
-  }, []);
 
   const handleSave = useCallback(() => {
     onSave(settings);
@@ -158,6 +173,34 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                   </button>
                 );
               })}
+            </div>
+          </div>
+
+          {/* Ses Ayarları */}
+          <div className="setting-section">
+            <div className="setting-header">
+              <h3 className="setting-title">Ses Efektleri</h3>
+              <div className="current-value">
+                {soundEnabled ? 'Açık' : 'Kapalı'}
+              </div>
+            </div>
+            
+            <div className="sound-toggle">
+              <button
+                className={`sound-toggle-button ${soundEnabled ? 'enabled' : 'disabled'}`}
+                onClick={handleSoundToggle}
+              >
+                <span className="sound-icon">
+                  {soundEnabled ? '🔊' : '🔇'}
+                </span>
+                <span className="sound-text">
+                  {soundEnabled ? 'Ses Açık' : 'Ses Kapalı'}
+                </span>
+              </button>
+            </div>
+            
+            <div className="setting-description">
+              <p>Ses tercihiniz tarayıcınızda kaydedilir ve sonraki ziyaretlerinizde hatırlanır.</p>
             </div>
           </div>
 

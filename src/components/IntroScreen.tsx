@@ -3,10 +3,17 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './IntroScreen.css';
 
+interface AccordionItem {
+  id: string;
+  title: string;
+  content: React.ReactNode;
+}
+
 const IntroScreen: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser, signIn, signOut } = useAuth();
   const [avatarError, setAvatarError] = useState(false);
+  const [openAccordion, setOpenAccordion] = useState<string | null>(null);
 
   // Avatar resim yükleme hatası durumunda
   const handleAvatarError = () => {
@@ -42,6 +49,61 @@ const IntroScreen: React.FC = () => {
     }
   };
 
+  const toggleAccordion = (id: string) => {
+    setOpenAccordion(openAccordion === id ? null : id);
+  };
+
+  const accordionItems: AccordionItem[] = [
+    {
+      id: 'how-to-play',
+      title: 'Nasıl Oynanır?',
+      content: (
+        <ul>
+          <li>Size 5 adet rakam (1-9) ve 1 adet büyük sayı (10-99) verilecek</li>
+          <li>2 dakika içinde adım adım işlemler yaparak hedefe ulaşmaya çalışın</li>
+          <li>Her adımda: 1. sayı seçin → işlem seçin → 2. sayı seçin → hesaplayın</li>
+          <li>Toplama (+), çıkarma (-), çarpma (×), bölme (÷) işlemlerini kullanabilirsiniz</li>
+          <li>Kullandığınız sayılar tekrar kullanılamaz</li>
+        </ul>
+      )
+    },
+    {
+      id: 'scoring-rules',
+      title: 'Puanlama ve Kurallar',
+      content: (
+        <ul>
+          <li>Hedef 3 basamaklı bir sayıdır (100-999 arası)</li>
+          <li>En yakın sonuç otomatik olarak kaydedilir ve puanlanır</li>
+          <li>Hedefe ne kadar yakın olursanız o kadar yüksek puan alırsınız</li>
+          <li>Kalan süre de bonus puan kazandırır</li>
+          <li>Geri al ve temizle butonları ile hatalarınızı düzeltebilirsiniz</li>
+          <li>Hedefe ulaştığınızda otomatik olarak sonuç ekranına geçersiniz</li>
+          <li><strong>Giriş yaparak skorlarınızı kaydedebilir ve sıralamalarda yer alabilirsiniz!</strong></li>
+        </ul>
+      )
+    },
+    {
+      id: 'example-game',
+      title: 'Örnek Oyun',
+      content: (
+        <div className="example-content">
+          <div className="example-numbers">
+            <p><strong>Sayılar:</strong> 5, 6, 8, 2, 5, 45</p>
+            <p><strong>Hedef:</strong> 234</p>
+          </div>
+          <div className="example-steps">
+            <p>Adım 1: 45 × 8 = 360</p>
+            <p>Adım 2: 360 - 6 = 354</p>
+            <p>Adım 3: 354 - 5 = 349</p>
+            <p>Adım 4: 349 - 2 = 347</p>
+            <p>Adım 5: 347 - 5 = 342</p>
+            <p><strong>Sonuç:</strong> 342 (Hedef 234'e yakın)</p>
+          </div>
+        </div>
+      )
+    }
+  ];
+
   return (
     <div className="intro-screen">
       <div className="intro-content">
@@ -69,55 +131,8 @@ const IntroScreen: React.FC = () => {
             </div>
           </div>
         )}
-        
-        <div className="instructions-grid">
-          <div className="left-column">
-            <div className="game-description">
-              <h2>Nasıl Oynanır?</h2>
-              <ul>
-                <li>Size 5 adet rakam (1-9) ve 1 adet büyük sayı (10-99) verilecek</li>
-                <li>2 dakika içinde adım adım işlemler yaparak hedefe ulaşmaya çalışın</li>
-                <li>Her adımda: 1. sayı seçin → işlem seçin → 2. sayı seçin → hesaplayın</li>
-                <li>Toplama (+), çıkarma (-), çarpma (×), bölme (÷) işlemlerini kullanabilirsiniz</li>
-                <li>Kullandığınız sayılar tekrar kullanılamaz</li>
-              </ul>
-            </div>
-          </div>
 
-          <div className="right-column">
-            <div className="game-description">
-              <h2>Puanlama ve Kurallar</h2>
-              <ul>
-                <li>Hedef 3 basamaklı bir sayıdır (100-999 arası)</li>
-                <li>En yakın sonuç otomatik olarak kaydedilir ve puanlanır</li>
-                <li>Hedefe ne kadar yakın olursanız o kadar yüksek puan alırsınız</li>
-                <li>Kalan süre de bonus puan kazandırır</li>
-                <li>Geri al ve temizle butonları ile hatalarınızı düzeltebilirsiniz</li>
-                <li>Hedefe ulaştığınızda otomatik olarak sonuç ekranına geçersiniz</li>
-                <li><strong>Giriş yaparak skorlarınızı kaydedebilir ve sıralamalarda yer alabilirsiniz!</strong></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        <div className="example">
-          <h3>Örnek Oyun:</h3>
-          <div className="example-content">
-            <div className="example-numbers">
-              <p><strong>Sayılar:</strong> 5, 6, 8, 2, 5, 45</p>
-              <p><strong>Hedef:</strong> 234</p>
-            </div>
-            <div className="example-steps">
-              <p>Adım 1: 45 × 8 = 360</p>
-              <p>Adım 2: 360 - 6 = 354</p>
-              <p>Adım 3: 354 - 5 = 349</p>
-              <p>Adım 4: 349 - 2 = 347</p>
-              <p>Adım 5: 347 - 5 = 342</p>
-              <p><strong>Sonuç:</strong> 342 (Hedef 234'e yakın)</p>
-            </div>
-          </div>
-        </div>
-
+        {/* Butonlar kullanıcı bilgilerinin altında */}
         <div className="action-buttons">
           <button className="start-button" onClick={handleStartGame}>
             Oyunu Başlat
@@ -142,6 +157,31 @@ const IntroScreen: React.FC = () => {
               </button>
             </>
           )}
+        </div>
+        
+        {/* Akordiyon Bilgi Bölümü */}
+        <div className="accordion-section">
+          <h2 className="accordion-title">Oyun Hakkında Bilgiler</h2>
+          <div className="accordion-container">
+            {accordionItems.map((item) => (
+              <div key={item.id} className="accordion-item">
+                <button
+                  className={`accordion-header ${openAccordion === item.id ? 'open' : ''}`}
+                  onClick={() => toggleAccordion(item.id)}
+                >
+                  <span className="accordion-title-text">{item.title}</span>
+                  <span className="accordion-icon">
+                    {openAccordion === item.id ? '−' : '+'}
+                  </span>
+                </button>
+                <div className={`accordion-content ${openAccordion === item.id ? 'open' : ''}`}>
+                  <div className="accordion-body">
+                    {item.content}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

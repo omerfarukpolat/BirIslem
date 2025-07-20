@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { soundManager } from '../utils/soundEffects';
+import Fireworks from './Fireworks';
 import './ResultScreen.css';
 
 interface ResultData {
@@ -18,6 +20,7 @@ const ResultScreen: React.FC = () => {
   const location = useLocation();
   const { currentUser, signIn } = useAuth();
   const resultData = location.state as ResultData;
+  const [showFireworks, setShowFireworks] = useState(false);
 
   // Eğer result data yoksa ana sayfaya yönlendir
   if (!resultData) {
@@ -26,6 +29,25 @@ const ResultScreen: React.FC = () => {
   }
 
   const { target, userResult, score, timeUsed, expression, calculationHistory, isLoggedIn } = resultData;
+
+  // Yüksek puan kontrolü ve havai fişek
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  useEffect(() => {
+    if (score >= 130) {
+      // Yüksek puan sesi çal
+      soundManager.playHighScore();
+
+      // Havai fişekleri başlat
+      setShowFireworks(true);
+
+      // 5 saniye sonra havai fişekleri durdur
+      const timer = setTimeout(() => {
+        setShowFireworks(false);
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [score]);
 
   const handlePlayAgain = () => {
     navigate('/game');
@@ -78,7 +100,7 @@ const ResultScreen: React.FC = () => {
   };
 
   const difference = userResult ? Math.abs(target - userResult) : 0;
-  
+
   // Yeni puanlama sistemi
   let accuracyScore = 0;
   if (difference === 0) {
@@ -92,12 +114,12 @@ const ResultScreen: React.FC = () => {
   } else {
     accuracyScore = Math.max(0, 20 - ((difference - 100) * 0.1));
   }
-  
+
   // Süre puanı (varsayılan 120 saniye için)
   const timeLimit = 120; // Bu değer ayarlardan gelmeli
   const timeRatio = timeUsed / timeLimit;
   let timeScore = 0;
-  
+
   if (timeRatio <= 0.25) {
     timeScore = 50;
   } else if (timeRatio <= 0.5) {
@@ -109,7 +131,7 @@ const ResultScreen: React.FC = () => {
   } else {
     timeScore = 0;
   }
-  
+
   const accuracy = Math.round(accuracyScore);
   const timeBonus = Math.round(timeScore);
 
@@ -224,6 +246,7 @@ const ResultScreen: React.FC = () => {
           </div>
         )}
       </div>
+      {showFireworks && <Fireworks isActive={showFireworks} />}
     </div>
   );
 };

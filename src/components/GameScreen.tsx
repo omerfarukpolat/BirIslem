@@ -4,6 +4,7 @@ import { useGame } from '../hooks/useGame';
 import { useAuth } from '../contexts/AuthContext';
 import { saveGameScore } from '../services/firebaseService';
 import { calculateScore } from '../utils/gameLogic';
+import { soundManager } from '../utils/soundEffects';
 import SettingsModal, { GameSettings } from './SettingsModal';
 import UserModal from './UserModal';
 import './GameScreen.css';
@@ -129,53 +130,16 @@ const GameScreen: React.FC = () => {
 
   // Ses context'ini başlat
   useEffect(() => {
-    audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)();
+    // Ses yöneticisi zaten otomatik olarak başlatılıyor
   }, []);
 
-  // Tik-tak sesi oluştur
-  const playTickTock = () => {
-    if (!audioContextRef.current) return;
-
-    const audioContext = audioContextRef.current;
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    // Tik sesi (yüksek frekans)
-    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
-    oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1);
-
-    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.1);
-
-    // Tak sesi (düşük frekans) - 0.2 saniye sonra
-    setTimeout(() => {
-      const oscillator2 = audioContext.createOscillator();
-      const gainNode2 = audioContext.createGain();
-
-      oscillator2.connect(gainNode2);
-      gainNode2.connect(audioContext.destination);
-
-      oscillator2.frequency.setValueAtTime(400, audioContext.currentTime);
-      oscillator2.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.1);
-
-      gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
-      gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
-
-      oscillator2.start(audioContext.currentTime);
-      oscillator2.stop(audioContext.currentTime + 0.1);
-    }, 200);
-  };
+  // Tik-tak sesi oluştur - Artık soundManager kullanıyoruz
+  // Bu fonksiyon artık gerekli değil
 
   // Son 10 saniyede tik-tak sesi çal
   useEffect(() => {
     if (gameState.timeLeft <= 10 && gameState.timeLeft > 0) {
-      playTickTock();
+      soundManager.playTickTock();
     }
   }, [gameState.timeLeft]);
 
@@ -195,6 +159,9 @@ const GameScreen: React.FC = () => {
     if (gameState.usedNumbers.includes(numberId)) {
       return;
     }
+
+    // Sayı seçme sesi çal
+    soundManager.playNumberSelect();
 
     if (!firstNumber) {
       // İlk sayı seçimi
@@ -222,6 +189,9 @@ const GameScreen: React.FC = () => {
     } else {
       // Diğer operatörler
       if (firstNumber) {
+        // Operatör seçme sesi çal
+        soundManager.playOperatorSelect();
+        
         setSelectedOperator(operator);
         // İkinci sayı seçiliyse sıfırla
         if (secondNumber) {
@@ -240,9 +210,13 @@ const GameScreen: React.FC = () => {
         const result = firstNumber / secondNumber;
         if (!Number.isInteger(result)) {
           // Sonuç tam sayı değilse işlemi engelle
+          soundManager.playError();
           return;
         }
       }
+
+      // Hesaplama sesi çal
+      soundManager.playCalculation();
 
       // ID'leri de gönder
       performCalculation(firstNumber, secondNumber, selectedOperator, firstNumberId || undefined, secondNumberId || undefined);
@@ -283,6 +257,9 @@ const GameScreen: React.FC = () => {
   };
 
   const handleClear = () => {
+    // Temizleme sesi çal
+    soundManager.playClear();
+    
     setFirstNumber(null);
     setSelectedOperator('');
     setSecondNumber(null);
@@ -343,6 +320,9 @@ const GameScreen: React.FC = () => {
   // Hedef sayıya ulaşıldığında otomatik sonuç ekranına geçiş
   useEffect(() => {
     if (gameState.currentResult === gameState.target) {
+      // Başarı sesi çal
+      soundManager.playSuccess();
+      
       // Kısa bir gecikme ile sonuç ekranına geç
       const timer = setTimeout(() => {
         submitResult();
@@ -590,7 +570,10 @@ const GameScreen: React.FC = () => {
             <div className="action-controls-row">
               <button
                 className="control-button undo"
-                onClick={undoLastStep}
+                onClick={() => {
+                  soundManager.playUndo();
+                  undoLastStep();
+                }}
                 disabled={gameState.calculationHistory.length === 0 || isGameOver}
                 title="Son İşlemi Geri Al"
               >
@@ -599,7 +582,10 @@ const GameScreen: React.FC = () => {
               </button>
               <button
                 className="control-button clear-all"
-                onClick={clearAllCalculations}
+                onClick={() => {
+                  soundManager.playClear();
+                  clearAllCalculations();
+                }}
                 disabled={gameState.calculationHistory.length === 0 || isGameOver}
                 title="Tüm İşlemleri Temizle"
               >
@@ -608,7 +594,10 @@ const GameScreen: React.FC = () => {
               </button>
               <button
                 className="control-button submit"
-                onClick={submitResult}
+                onClick={() => {
+                  soundManager.playSubmit();
+                  submitResult();
+                }}
                 disabled={isGameOver}
                 title="Oyunu Bitir ve Sonucu Gönder"
               >
