@@ -1121,6 +1121,10 @@
 @media (max-width: 768px) {
   .game-screen {
     padding: 0;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .game-page-header {
@@ -1131,6 +1135,9 @@
     border-radius: 0 0 16px 16px;
     align-items: center;
     justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
 
   .game-page-header::after {
@@ -1195,6 +1202,9 @@
     padding: 10px 12px;
     text-align: center;
     margin: 0 8px 8px 8px;
+    position: sticky;
+    top: 70px;
+    z-index: 90;
   }
 
   .target-section {
@@ -1208,7 +1218,7 @@
     margin-bottom: 6px;
     display: inline-block;
   }
-
+  
   .target-number {
     font-size: 1.8rem;
     padding: 8px 12px;
@@ -1240,7 +1250,7 @@
   .timer-section {
     flex: 1;
   }
-
+  
   .timer {
     font-size: 1.6rem;
     padding: 8px 10px;
@@ -1253,7 +1263,7 @@
     margin-bottom: 6px;
     display: block;
   }
-
+  
   .results-section {
     grid-template-columns: 1fr;
     gap: 8px;
@@ -1261,32 +1271,39 @@
   }
 
   .main-game-area {
-    gap: 10px;
+    gap: 15px;
     padding: 0 8px 8px 8px;
+    flex-direction: column;
   }
 
-  .left-panel,
+  .left-panel {
+    order: 1;
+  }
+
   .right-panel {
-    gap: 8px;
+    order: 2;
+    min-height: auto;
   }
 
   .selection-status {
     margin: 0 8px 8px 8px;
     padding: 10px;
   }
-
+  
   .numbers-row {
     gap: 6px;
   }
-
+  
   .operators-row {
     gap: 6px;
   }
-
+  
   .action-controls-row {
-    gap: 6px;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
   }
-
+  
   .number-button,
   .operator-button {
     padding: 6px;
@@ -1294,11 +1311,13 @@
     min-width: 38px;
     min-height: 38px;
   }
-
+  
   .control-button {
-    padding: 5px 8px;
-    font-size: 0.7rem;
-    min-width: 60px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    min-width: auto;
+    flex: 1;
+    max-width: 150px;
   }
 
   .selected-numbers {
@@ -1327,6 +1346,10 @@
 @media (max-width: 480px) {
   .game-screen {
     padding: 0;
+    height: auto;
+    min-height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .game-page-header {
@@ -1335,6 +1358,9 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
   }
 
   .game-page-header::after {
@@ -1393,6 +1419,9 @@
     margin: 0 6px 6px 6px;
     flex-direction: row;
     gap: 6px;
+    position: sticky;
+    top: 60px;
+    z-index: 90;
   }
 
   .target-number {
@@ -1433,16 +1462,48 @@
 
   .main-game-area {
     padding: 0 6px 6px 6px;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .left-panel {
+    order: 1;
+  }
+
+  .right-panel {
+    order: 2;
+    min-height: auto;
   }
 
   .selection-status {
     margin: 0 6px 6px 6px;
   }
 
-  .numbers-operators-section,
-  .calculation-section,
+  .numbers-operators-section {
+    position: sticky;
+    top: 140px;
+    z-index: 80;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(148, 163, 184, 0.1);
+  }
+
+  .calculation-section {
+    position: sticky;
+    top: 300px;
+    z-index: 70;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(148, 163, 184, 0.1);
+  }
+
   .history-section {
-    padding: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+    max-height: 300px;
+    overflow-y: auto;
   }
 
   .number-button,
@@ -1451,6 +1512,23 @@
     font-size: 0.8rem;
     min-width: 34px;
     min-height: 34px;
+  }
+
+  .action-controls-row {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-top: 15px;
+  }
+
+  .control-button {
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    min-width: auto;
+    flex: 1;
+    max-width: 120px;
   }
 
   .selected-numbers {
