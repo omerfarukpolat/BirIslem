@@ -1,11 +1,13 @@
 {
   "short_name": "Bir İşlem",
-  "name": "Bir İşlem - Matematik Zeka Oyunu",
+  "name": "Bir İşlem - Matematik Zeka Oyunu | Ücretsiz Online Oyun",
+  "description": "Bir İşlem matematik zeka oyunu ile matematik becerilerinizi test edin! 5 küçük sayı ve 1 büyük sayı ile hedef sayıya ulaşmaya çalışın. Ücretsiz online matematik oyunu.",
   "icons": [
     {
       "src": "logo.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     },
     {
       "src": "favicon.ico",
@@ -13,9 +15,23 @@
       "type": "image/x-icon"
     }
   ],
-  "start_url": ".",
+  "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
   "theme_color": "#667eea",
   "background_color": "#ffffff",
-  "description": "5 küçük sayı ve 1 büyük sayı ile hedef sayıya ulaşmaya çalışın. Matematik zekanızı test edin!"
+  "categories": ["games", "education", "puzzle"],
+  "lang": "tr",
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "screenshots": [
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "form_factor": "wide"
+    }
+  ]
 }
