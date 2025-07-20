@@ -1,18 +1,49 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getLeaderboard, getUserStats } from '../services/firebaseService';
 import { LeaderboardEntry, LeaderboardPeriod } from '../types/user';
 import { useAuth } from '../contexts/AuthContext';
 import './LeaderboardScreen.css';
 
+type SortType = 'bestScore' | 'averageScore' | 'totalScore' | 'gamesPlayed';
+
 const LeaderboardScreen: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [period, setPeriod] = useState<LeaderboardPeriod>('daily');
+  const [sortType, setSortType] = useState<SortType>('bestScore');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userStats, setUserStats] = useState<any>(null);
+
+  // Sıralama seçenekleri
+  const sortOptions = [
+    { value: 'bestScore', label: 'En İyi Skor', icon: '🏆' },
+    { value: 'averageScore', label: 'Ortalama Skor', icon: '📊' },
+    { value: 'totalScore', label: 'Toplam Skor', icon: '📈' },
+    { value: 'gamesPlayed', label: 'Oyun Sayısı', icon: '🎮' }
+  ];
+
+  // Sıralanmış leaderboard
+  const sortedLeaderboard = useMemo(() => {
+    if (!leaderboard.length) return [];
+    
+    return [...leaderboard].sort((a, b) => {
+      switch (sortType) {
+        case 'bestScore':
+          return b.bestScore - a.bestScore;
+        case 'averageScore':
+          return b.averageScore - a.averageScore;
+        case 'totalScore':
+          return b.totalScore - a.totalScore;
+        case 'gamesPlayed':
+          return b.gamesPlayed - a.gamesPlayed;
+        default:
+          return 0;
+      }
+    });
+  }, [leaderboard, sortType]);
 
   useEffect(() => {
     loadLeaderboard();
@@ -76,11 +107,18 @@ const LeaderboardScreen: React.FC = () => {
     navigate('/');
   };
 
+  const getSortLabel = (type: SortType): string => {
+    const option = sortOptions.find(opt => opt.value === type);
+    return option ? option.label : '';
+  };
+
   return (
     <div className="leaderboard-screen">
       <div className="leaderboard-container">
         <div className="leaderboard-header">
           <h1 className="leaderboard-title">🏆 Sıralama</h1>
+          
+          {/* Dönem Seçici */}
           <div className="period-selector">
             <button 
               className={`period-button ${period === 'daily' ? 'active' : ''}`}
@@ -100,6 +138,24 @@ const LeaderboardScreen: React.FC = () => {
             >
               Aylık
             </button>
+          </div>
+
+          {/* Sıralama Seçici */}
+          <div className="sort-selector">
+            <div className="sort-label">Sıralama:</div>
+            <div className="sort-options">
+              {sortOptions.map((option) => (
+                <button
+                  key={option.value}
+                  className={`sort-button ${sortType === option.value ? 'active' : ''}`}
+                  onClick={() => setSortType(option.value as SortType)}
+                  title={option.label}
+                >
+                  <span className="sort-icon">{option.icon}</span>
+                  <span className="sort-text">{option.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -139,27 +195,38 @@ const LeaderboardScreen: React.FC = () => {
             </div>
           ) : (
             <div className="leaderboard-list">
-              {leaderboard.length === 0 ? (
+              {sortedLeaderboard.length === 0 ? (
                 <div className="no-data">Henüz skor bulunmuyor.</div>
               ) : (
-                leaderboard.map((entry, index) => (
-                  <div 
-                    key={entry.userId} 
-                    className={`leaderboard-item ${currentUser?.uid === entry.userId ? 'current-user' : ''}`}
-                  >
-                    <div className="rank">{index + 1}</div>
-                    <div className="user-info">
-                      <div className="user-name">{entry.userName}</div>
-                      <div className="user-details">
-                        {entry.gamesPlayed} oyun • Ortalama: {entry.averageScore}
+                <>
+                  {/* Sıralama Başlığı */}
+                  <div className="sort-header">
+                    <span className="sort-indicator">
+                      {sortOptions.find(opt => opt.value === sortType)?.icon} 
+                      {getSortLabel(sortType)}'e göre sıralanıyor
+                    </span>
+                  </div>
+                  
+                  {/* Sıralama Listesi */}
+                  {sortedLeaderboard.map((entry, index) => (
+                    <div 
+                      key={entry.userId} 
+                      className={`leaderboard-item ${currentUser?.uid === entry.userId ? 'current-user' : ''}`}
+                    >
+                      <div className="rank">{index + 1}</div>
+                      <div className="user-info">
+                        <div className="user-name">{entry.userName}</div>
+                        <div className="user-details">
+                          {entry.gamesPlayed} oyun • Ortalama: {entry.averageScore}
+                        </div>
+                      </div>
+                      <div className="score-info">
+                        <div className="total-score">{entry.totalScore}</div>
+                        <div className="best-score">En İyi: {entry.bestScore}</div>
                       </div>
                     </div>
-                    <div className="score-info">
-                      <div className="total-score">{entry.totalScore}</div>
-                      <div className="best-score">En İyi: {entry.bestScore}</div>
-                    </div>
-                  </div>
-                ))
+                  ))}
+                </>
               )}
             </div>
           )}

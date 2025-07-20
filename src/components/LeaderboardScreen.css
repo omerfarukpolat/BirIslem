@@ -58,7 +58,7 @@
   display: flex;
   justify-content: center;
   gap: 15px;
-  margin-bottom: 30px;
+  margin-bottom: 20px;
 }
 
 .period-button {
@@ -87,6 +87,98 @@
 
 .period-button.active:hover {
   box-shadow: 0 8px 25px rgba(5, 150, 105, 0.4);
+}
+
+/* Sıralama Seçici */
+.sort-selector {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 30px;
+}
+
+.sort-label {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.sort-options {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.sort-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.1), rgba(203, 213, 225, 0.1));
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  padding: 10px 16px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  min-width: 140px;
+  justify-content: center;
+}
+
+.sort-button:hover {
+  background: linear-gradient(135deg, rgba(148, 163, 184, 0.2), rgba(203, 213, 225, 0.2));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(148, 163, 184, 0.15);
+}
+
+.sort-button.active {
+  background: linear-gradient(135deg, #0891b2 0%, #0e7490 100%);
+  color: white;
+  border-color: #0891b2;
+  box-shadow: 0 4px 15px rgba(8, 145, 178, 0.3);
+}
+
+.sort-button.active:hover {
+  box-shadow: 0 6px 20px rgba(8, 145, 178, 0.4);
+}
+
+.sort-icon {
+  font-size: 1.1rem;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sort-button:hover .sort-icon {
+  transform: scale(1.1);
+}
+
+.sort-text {
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+/* Sıralama Başlığı */
+.sort-header {
+  background: linear-gradient(135deg, rgba(8, 145, 178, 0.1), rgba(8, 145, 178, 0.05));
+  border: 1px solid rgba(8, 145, 178, 0.2);
+  border-radius: 12px;
+  padding: 12px 20px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.sort-indicator {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0891b2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
 .user-stats-section {
@@ -362,72 +454,483 @@
 }
 
 @media (max-width: 768px) {
+  .leaderboard-screen {
+    padding: 10px;
+  }
+
   .leaderboard-container {
-    padding: 25px;
+    padding: 20px;
+    border-radius: 16px;
+    max-width: 100%;
   }
 
   .leaderboard-title {
-    font-size: 2.2rem;
+    font-size: 2rem;
+    margin-bottom: 20px;
   }
 
+  /* Dönem Seçici - Daha Kompakt */
   .period-selector {
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 15px;
   }
 
   .period-button {
-    width: 200px;
+    width: auto;
+    min-width: 80px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    border-radius: 10px;
+  }
+
+  /* Sıralama Seçici - Daha Kompakt */
+  .sort-selector {
+    margin-bottom: 20px;
+  }
+
+  .sort-label {
+    font-size: 0.9rem;
+    margin-bottom: 6px;
+  }
+
+  .sort-options {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 6px;
+    justify-content: center;
+  }
+
+  .sort-button {
+    width: auto;
+    min-width: 100px;
+    padding: 8px 12px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+
+  .sort-icon {
+    font-size: 1rem;
+  }
+
+  .sort-text {
+    font-size: 0.8rem;
+  }
+
+  .sort-header {
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+  }
+
+  .sort-indicator {
+    font-size: 0.85rem;
+  }
+
+  /* Kullanıcı İstatistikleri - Daha Kompakt */
+  .user-stats-section {
+    padding: 20px;
+    margin-bottom: 25px;
+    border-radius: 12px;
+  }
+
+  .user-stats-section h3 {
+    font-size: 1.2rem;
+    margin-bottom: 15px;
   }
 
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .stat-item {
+    padding: 15px 10px;
+    border-radius: 10px;
+  }
+
+  .stat-value {
+    font-size: 1.5rem;
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+  }
+
+  /* Leaderboard Listesi - Daha Kompakt */
+  .leaderboard-list {
+    gap: 10px;
   }
 
   .leaderboard-item {
-    flex-direction: column;
-    text-align: center;
-    gap: 15px;
-    padding: 20px;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 0;
+  }
+
+  .rank {
+    font-size: 1.4rem;
+    min-width: 35px;
   }
 
   .user-info {
-    margin-left: 0;
+    margin-left: 12px;
+  }
+
+  .user-name {
+    font-size: 1rem;
+    margin-bottom: 4px;
+  }
+
+  .user-details {
+    font-size: 0.8rem;
   }
 
   .score-info {
-    text-align: center;
+    text-align: right;
+    min-width: 80px;
   }
 
+  .total-score {
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+  }
+
+  .best-score {
+    font-size: 0.8rem;
+  }
+
+  /* Butonlar - Daha Kompakt */
   .action-buttons {
-    flex-direction: column;
-    align-items: center;
+    flex-direction: row;
+    gap: 12px;
+    margin-top: 20px;
   }
 
   .play-button,
   .home-button {
-    width: 100%;
-    max-width: 250px;
+    width: auto;
+    min-width: 120px;
+    padding: 12px 20px;
+    font-size: 0.9rem;
+    border-radius: 10px;
   }
 }
 
 @media (max-width: 480px) {
+  .leaderboard-screen {
+    padding: 5px;
+  }
+
   .leaderboard-container {
-    padding: 20px;
-    margin: 10px;
+    padding: 15px;
+    margin: 5px;
+    border-radius: 12px;
   }
 
   .leaderboard-title {
-    font-size: 1.8rem;
+    font-size: 1.6rem;
+    margin-bottom: 15px;
+  }
+
+  /* Dönem Seçici - Çok Kompakt */
+  .period-selector {
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .period-button {
+    min-width: 70px;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
+
+  /* Sıralama Seçici - Çok Kompakt */
+  .sort-selector {
+    margin-bottom: 15px;
+  }
+
+  .sort-label {
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+  }
+
+  .sort-options {
+    gap: 4px;
+  }
+
+  .sort-button {
+    min-width: 80px;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+  }
+
+  .sort-icon {
+    font-size: 0.9rem;
+  }
+
+  .sort-text {
+    font-size: 0.7rem;
+  }
+
+  .sort-header {
+    padding: 6px 10px;
+    margin-bottom: 10px;
+    border-radius: 6px;
+  }
+
+  .sort-indicator {
+    font-size: 0.8rem;
+  }
+
+  /* Kullanıcı İstatistikleri - Çok Kompakt */
+  .user-stats-section {
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 10px;
+  }
+
+  .user-stats-section h3 {
+    font-size: 1.1rem;
+    margin-bottom: 12px;
   }
 
   .stats-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
   }
 
-  .user-stats-section,
-  .leaderboard-content {
-    padding: 20px;
+  .stat-item {
+    padding: 12px 8px;
+    border-radius: 8px;
+  }
+
+  .stat-value {
+    font-size: 1.3rem;
+    margin-bottom: 4px;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+  }
+
+  /* Leaderboard Listesi - Çok Kompakt */
+  .leaderboard-list {
+    gap: 8px;
+  }
+
+  .leaderboard-item {
+    padding: 12px;
+    border-radius: 10px;
+    flex-wrap: wrap;
+  }
+
+  .rank {
+    font-size: 1.2rem;
+    min-width: 30px;
+  }
+
+  .user-info {
+    margin-left: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .user-name {
+    font-size: 0.95rem;
+    margin-bottom: 3px;
+  }
+
+  .user-details {
+    font-size: 0.75rem;
+  }
+
+  .score-info {
+    text-align: right;
+    min-width: 70px;
+    flex-shrink: 0;
+  }
+
+  .total-score {
+    font-size: 1.1rem;
+    margin-bottom: 3px;
+  }
+
+  .best-score {
+    font-size: 0.75rem;
+  }
+
+  /* Butonlar - Çok Kompakt */
+  .action-buttons {
+    gap: 8px;
+    margin-top: 15px;
+  }
+
+  .play-button,
+  .home-button {
+    min-width: 100px;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    border-radius: 8px;
+  }
+}
+
+/* Çok Küçük Ekranlar */
+@media (max-width: 360px) {
+  .leaderboard-screen {
+    padding: 2px;
+  }
+
+  .leaderboard-container {
+    padding: 12px;
+    margin: 2px;
+    border-radius: 8px;
+  }
+
+  .leaderboard-title {
+    font-size: 1.4rem;
+    margin-bottom: 12px;
+  }
+
+  /* Dönem Seçici - Ultra Kompakt */
+  .period-selector {
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+
+  .period-button {
+    min-width: 60px;
+    padding: 5px 8px;
+    font-size: 0.75rem;
+    border-radius: 6px;
+  }
+
+  /* Sıralama Seçici - Ultra Kompakt */
+  .sort-selector {
+    margin-bottom: 12px;
+  }
+
+  .sort-label {
+    font-size: 0.8rem;
+    margin-bottom: 3px;
+  }
+
+  .sort-options {
+    gap: 3px;
+  }
+
+  .sort-button {
+    min-width: 70px;
+    padding: 5px 8px;
+    font-size: 0.7rem;
+    border-radius: 5px;
+  }
+
+  .sort-icon {
+    font-size: 0.8rem;
+  }
+
+  .sort-text {
+    font-size: 0.65rem;
+  }
+
+  .sort-header {
+    padding: 5px 8px;
+    margin-bottom: 8px;
+    border-radius: 5px;
+  }
+
+  .sort-indicator {
+    font-size: 0.75rem;
+  }
+
+  /* Kullanıcı İstatistikleri - Ultra Kompakt */
+  .user-stats-section {
+    padding: 12px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+  }
+
+  .user-stats-section h3 {
+    font-size: 1rem;
+    margin-bottom: 10px;
+  }
+
+  .stats-grid {
+    gap: 6px;
+  }
+
+  .stat-item {
+    padding: 10px 6px;
+    border-radius: 6px;
+  }
+
+  .stat-value {
+    font-size: 1.1rem;
+    margin-bottom: 3px;
+  }
+
+  .stat-label {
+    font-size: 0.7rem;
+  }
+
+  /* Leaderboard Listesi - Ultra Kompakt */
+  .leaderboard-list {
+    gap: 6px;
+  }
+
+  .leaderboard-item {
+    padding: 10px;
+    border-radius: 8px;
+  }
+
+  .rank {
+    font-size: 1.1rem;
+    min-width: 25px;
+  }
+
+  .user-info {
+    margin-left: 8px;
+  }
+
+  .user-name {
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+  }
+
+  .user-details {
+    font-size: 0.7rem;
+  }
+
+  .score-info {
+    min-width: 60px;
+  }
+
+  .total-score {
+    font-size: 1rem;
+    margin-bottom: 2px;
+  }
+
+  .best-score {
+    font-size: 0.7rem;
+  }
+
+  /* Butonlar - Ultra Kompakt */
+  .action-buttons {
+    gap: 6px;
+    margin-top: 12px;
+  }
+
+  .play-button,
+  .home-button {
+    min-width: 80px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    border-radius: 6px;
   }
 }
 
