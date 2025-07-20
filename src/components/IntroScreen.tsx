@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import './IntroScreen.css';
@@ -6,6 +6,19 @@ import './IntroScreen.css';
 const IntroScreen: React.FC = () => {
   const navigate = useNavigate();
   const { currentUser, signIn, signOut } = useAuth();
+  const [avatarError, setAvatarError] = useState(false);
+
+  // Avatar resim yükleme hatası durumunda
+  const handleAvatarError = () => {
+    console.log('IntroScreen: Avatar resmi yüklenemedi, placeholder gösteriliyor');
+    setAvatarError(true);
+  };
+
+  // Avatar resim yükleme başarılı olduğunda
+  const handleAvatarLoad = () => {
+    console.log('IntroScreen: Avatar resmi başarıyla yüklendi');
+    setAvatarError(false);
+  };
 
   const handleStartGame = () => {
     navigate('/game');
@@ -39,11 +52,16 @@ const IntroScreen: React.FC = () => {
         {currentUser && (
           <div className="user-info">
             <div className="user-avatar">
-              {currentUser.photoURL ? (
-                <img src={currentUser.photoURL} alt={currentUser.displayName} />
+              {currentUser.photoURL && !avatarError ? (
+                <img 
+                  src={currentUser.photoURL} 
+                  alt={currentUser.displayName || 'Kullanıcı'} 
+                  onError={handleAvatarError}
+                  onLoad={handleAvatarLoad}
+                />
               ) : (
                 <div className="avatar-placeholder">
-                  {currentUser.displayName.charAt(0).toUpperCase()}
+                  {currentUser.displayName ? currentUser.displayName.charAt(0).toUpperCase() : 'U'}
                 </div>
               )}
             </div>

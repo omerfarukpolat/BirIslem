@@ -1,15 +1,46 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { GameState, GameResult, CalculationStep, NumberWithId } from '../types/game';
 import { initializeGame, evaluateExpression, calculateScore, calculateResult } from '../utils/gameLogic';
+import { GameSettings } from '../components/SettingsModal';
+
+// localStorage key'leri
+const GAME_SETTINGS_KEY = 'gameSettings';
+
+// localStorage'dan ayarları yükle
+const loadGameSettings = (): GameSettings => {
+  try {
+    const savedSettings = localStorage.getItem(GAME_SETTINGS_KEY);
+    if (savedSettings) {
+      return JSON.parse(savedSettings);
+    }
+  } catch (error) {
+    console.error('Ayarlar yüklenirken hata:', error);
+  }
+  
+  // Varsayılan ayarlar
+  return {
+    timeLimit: 120, // 2 dakika varsayılan
+    operationLimit: 0 // Sınırsız varsayılan
+  };
+};
+
+// Ayarları localStorage'a kaydet
+const saveGameSettings = (settings: GameSettings) => {
+  try {
+    localStorage.setItem(GAME_SETTINGS_KEY, JSON.stringify(settings));
+  } catch (error) {
+    console.error('Ayarlar kaydedilirken hata:', error);
+  }
+};
 
 export const useGame = () => {
-  // Normal oyun süresi: 120 saniye (2 dakika)
-  const GAME_DURATION = useMemo(() => 120, []); // Normal süre: 120 saniye
+  // localStorage'dan ayarları yükle
+  const [gameSettings, setGameSettings] = useState<GameSettings>(loadGameSettings);
   
   const [gameState, setGameState] = useState<GameState>({
     numbers: [],
     target: 0,
-    timeLeft: GAME_DURATION,
+    timeLeft: gameSettings.timeLimit,
     score: 0,
     userExpression: '',
     userResult: null,
@@ -24,6 +55,11 @@ export const useGame = () => {
     usedNumbers: []
   });
 
+  // Ayarlar değiştiğinde localStorage'a kaydet
+  useEffect(() => {
+    saveGameSettings(gameSettings);
+  }, [gameSettings]);
+
   // Timer effect
   useEffect(() => {
     let interval: NodeJS.Timeout;
@@ -37,7 +73,7 @@ export const useGame = () => {
             // Süre doldu, oyunu bitir
             const finalResult = prev.closestResult || prev.currentResult;
             const finalScore = finalResult 
-              ? calculateScore(prev.target, finalResult, GAME_DURATION)
+              ? calculateScore(prev.target, finalResult, gameSettings.timeLimit)
               : 0;
             
             return {
@@ -62,10 +98,11 @@ export const useGame = () => {
         clearInterval(interval);
       }
     };
-  }, [gameState.isGameActive, gameState.timeLeft, GAME_DURATION]);
+  }, [gameState.isGameActive, gameState.timeLeft, gameSettings.timeLimit]);
 
   // Oyunu başlat
-  const startGame = useCallback(() => {
+  const startGame = useCallback((settings?: GameSettings) => {
+    const settingsToUse = settings || gameSettings;
     const newGame = initializeGame();
     const availableNumbersWithIds: NumberWithId[] = newGame.numbers.map((num, index) => ({
       id: `original-${index}`,
@@ -75,7 +112,7 @@ export const useGame = () => {
     
     setGameState({
       ...newGame,
-      timeLeft: GAME_DURATION, // GAME_DURATION ile override et
+      timeLeft: settingsToUse.timeLimit,
       availableNumbers: availableNumbersWithIds,
       currentResult: null,
       calculationHistory: [],
@@ -85,11 +122,21 @@ export const useGame = () => {
       bestResult: null,
       usedNumbers: []
     });
-  }, [GAME_DURATION]);
+    
+    // Eğer yeni settings verildiyse güncelle
+    if (settings) {
+      setGameSettings(settings);
+    }
+  }, [gameSettings]);
 
   // İki sayı arasında işlem yap
   const performCalculation = useCallback((firstNumber: number, secondNumber: number, operator: string, firstNumberId?: string, secondNumberId?: string) => {
     setGameState(prev => {
+      // İşlem sınırı kontrolü
+      if (gameSettings.operationLimit > 0 && prev.calculationHistory.length >= gameSettings.operationLimit) {
+        return prev; // İşlem sınırına ulaşıldıysa işlemi yapma
+      }
+      
       const result = calculateResult(firstNumber, secondNumber, operator as any);
       const newStep: CalculationStep = {
         firstNumber,
@@ -144,7 +191,7 @@ export const useGame = () => {
         bestCalculationHistory: newBestCalculationHistory
       };
     });
-  }, []);
+  }, [gameSettings.operationLimit]);
 
   // Son adımı geri al
   const undoLastStep = useCallback(() => {
@@ -238,7 +285,7 @@ export const useGame = () => {
   // Sonucu hesapla ve oyunu bitir
   const submitResult = useCallback(() => {
     const finalResult = gameState.closestResult || gameState.currentResult;
-    const timeUsed = GAME_DURATION - gameState.timeLeft;
+    const timeUsed = gameSettings.timeLimit - gameState.timeLeft;
     const score = finalResult ? calculateScore(gameState.target, finalResult, timeUsed) : 0;
 
     setGameState(prev => ({
@@ -247,7 +294,7 @@ export const useGame = () => {
       userResult: finalResult,
       score
     }));
-  }, [gameState.closestResult, gameState.currentResult, gameState.target, gameState.timeLeft, GAME_DURATION]);
+  }, [gameState.closestResult, gameState.currentResult, gameState.target, gameState.timeLeft, gameSettings.timeLimit]);
 
   return {
     gameState,
@@ -255,6 +302,7 @@ export const useGame = () => {
     performCalculation,
     undoLastStep,
     clearAllCalculations,
-    submitResult
+    submitResult,
+    gameSettings
   };
 }; 

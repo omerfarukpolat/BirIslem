@@ -4,19 +4,22 @@ import { useGame } from '../hooks/useGame';
 import { useAuth } from '../contexts/AuthContext';
 import { saveGameScore } from '../services/firebaseService';
 import { calculateScore } from '../utils/gameLogic';
+import SettingsModal, { GameSettings } from './SettingsModal';
+import UserModal from './UserModal';
 import './GameScreen.css';
 
 const GameScreen: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { currentUser, signOut } = useAuth();
+  const { currentUser, signOut, signIn } = useAuth();
   const { 
     gameState, 
     startGame, 
     performCalculation, 
     undoLastStep, 
     clearAllCalculations, 
-    submitResult 
+    submitResult,
+    gameSettings
   } = useGame();
 
   const [firstNumber, setFirstNumber] = useState<number | null>(null);
@@ -24,7 +27,22 @@ const GameScreen: React.FC = () => {
   const [secondNumber, setSecondNumber] = useState<number | null>(null);
   const [firstNumberId, setFirstNumberId] = useState<string | null>(null);
   const [secondNumberId, setSecondNumberId] = useState<string | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
+
+  // Avatar resim yükleme hatası durumunda
+  const handleAvatarError = () => {
+    console.log('Avatar resmi yüklenemedi, placeholder gösteriliyor');
+    setAvatarError(true);
+  };
+
+  // Avatar resim yükleme başarılı olduğunda
+  const handleAvatarLoad = () => {
+    console.log('Avatar resmi başarıyla yüklendi');
+    setAvatarError(false);
+  };
 
   // Oyun bittiğinde butonları disable et
   const isGameOver = !gameState.isGameActive || gameState.timeLeft <= 0;
@@ -33,16 +51,47 @@ const GameScreen: React.FC = () => {
   const handleSignOut = async () => {
     try {
       await signOut();
+      setIsUserModalOpen(false);
       navigate('/');
     } catch (error) {
       console.error('Çıkış yapılırken hata:', error);
     }
   };
 
+  // Google ile giriş yap
+  const handleGoogleSignIn = async () => {
+    try {
+      await signIn();
+      // Sayfa yenilenmesi için kısa bir gecikme
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } catch (error) {
+      console.error('Google ile giriş yapılırken hata:', error);
+    }
+  };
+
+  // Avatar'a tıklandığında
+  const handleAvatarClick = () => {
+    // Her durumda modal aç
+    setIsUserModalOpen(true);
+  };
+
+  // Settings modal'ını aç
+  const handleOpenSettings = () => {
+    setIsSettingsOpen(true);
+  };
+
+  // Settings'i kaydet ve oyunu sıfırla
+  const handleSaveSettings = (newSettings: GameSettings) => {
+    // Oyunu yeni ayarlarla başlat
+    startGame(newSettings);
+  };
+
   // Oyunu başlat
   useEffect(() => {
-    startGame();
-  }, [startGame]);
+    startGame(gameSettings);
+  }, [startGame, gameSettings]);
 
   // Sonuç ekranına geçiş ve skor kaydetme
   useEffect(() => {
@@ -56,29 +105,29 @@ const GameScreen: React.FC = () => {
           score: gameState.score,
           target: gameState.target,
           userResult: gameState.userResult,
-          timeUsed: 120 - gameState.timeLeft, // Normal oyun süresi: 120 saniye
+          timeUsed: gameSettings.timeLimit - gameState.timeLeft, // Dinamik süre hesaplama
           calculationHistory: gameState.bestCalculationHistory
         };
-        
+
         saveGameScore(scoreData).catch(error => {
           console.error('Skor kaydedilirken hata:', error);
         });
       }
-      
+
       // Sonuç ekranına yönlendir
-      navigate('/result', { 
-        state: { 
+      navigate('/result', {
+        state: {
           target: gameState.target,
           userResult: gameState.userResult,
           score: gameState.score,
-          timeUsed: 120 - gameState.timeLeft, // Normal oyun süresi: 120 saniye
+          timeUsed: gameSettings.timeLimit - gameState.timeLeft, // Dinamik süre hesaplama
           expression: gameState.userExpression,
           calculationHistory: gameState.bestCalculationHistory,
           isLoggedIn: !!currentUser
-        } 
+        }
       });
     }
-  }, [gameState.isGameActive, gameState.userResult, navigate, gameState, currentUser]);
+  }, [gameState.isGameActive, gameState.userResult, navigate, gameState, currentUser, gameSettings.timeLimit]);
 
   // Ses context'ini başlat
   useEffect(() => {
@@ -99,7 +148,7 @@ const GameScreen: React.FC = () => {
     // Tik sesi (yüksek frekans)
     oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
     oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1);
-    
+
     gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
     gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
 
@@ -116,7 +165,7 @@ const GameScreen: React.FC = () => {
 
       oscillator2.frequency.setValueAtTime(400, audioContext.currentTime);
       oscillator2.frequency.exponentialRampToValueAtTime(300, audioContext.currentTime + 0.1);
-      
+
       gainNode2.gain.setValueAtTime(0.3, audioContext.currentTime);
       gainNode2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
 
@@ -160,25 +209,8 @@ const GameScreen: React.FC = () => {
 
   const handleOperatorClick = (operator: string) => {
     if (operator === '=') {
-      // Eşittir operatörü - hesaplama yap
-      if (firstNumber && selectedOperator && secondNumber) {
-        // Bölme işleminde sonuç kontrolü
-        if (selectedOperator === '/' && secondNumber !== 0) {
-          const result = firstNumber / secondNumber;
-          if (!Number.isInteger(result)) {
-            // Sonuç tam sayı değilse işlemi engelle
-            return;
-          }
-        }
-        
-        // ID'leri de gönder
-        performCalculation(firstNumber, secondNumber, selectedOperator, firstNumberId || undefined, secondNumberId || undefined);
-        setFirstNumber(null);
-        setSelectedOperator('');
-        setSecondNumber(null);
-        setFirstNumberId(null);
-        setSecondNumberId(null);
-      }
+      // Eşittir operatörü artık kullanılmıyor
+      return;
     } else {
       // Diğer operatörler
       if (firstNumber) {
@@ -192,6 +224,28 @@ const GameScreen: React.FC = () => {
     }
   };
 
+  // İkinci sayı seçildiğinde otomatik hesaplama yap
+  useEffect(() => {
+    if (firstNumber && selectedOperator && secondNumber) {
+      // Bölme işleminde sonuç kontrolü
+      if (selectedOperator === '/' && secondNumber !== 0) {
+        const result = firstNumber / secondNumber;
+        if (!Number.isInteger(result)) {
+          // Sonuç tam sayı değilse işlemi engelle
+          return;
+        }
+      }
+
+      // ID'leri de gönder
+      performCalculation(firstNumber, secondNumber, selectedOperator, firstNumberId || undefined, secondNumberId || undefined);
+      setFirstNumber(null);
+      setSelectedOperator('');
+      setSecondNumber(null);
+      setFirstNumberId(null);
+      setSecondNumberId(null);
+    }
+  }, [firstNumber, selectedOperator, secondNumber, firstNumberId, secondNumberId, performCalculation]);
+
   // Bölme işleminde sonuç kontrolü
   const isDivisionValid = () => {
     if (firstNumber && selectedOperator === '/' && secondNumber) {
@@ -202,16 +256,22 @@ const GameScreen: React.FC = () => {
     return true;
   };
 
-  // Eşittir operatörünün aktif olup olmadığını kontrol et
-  const isEqualsEnabled = () => {
-    if (!firstNumber || !selectedOperator || !secondNumber) return false;
-    
-    // Bölme işleminde özel kontrol
-    if (selectedOperator === '/') {
-      return isDivisionValid();
+  // Seçim durumuna göre mesaj
+  const getSelectionMessage = () => {
+    if (isGameOver) return 'Süre doldu! Sonuç ekranına yönlendiriliyorsunuz...';
+    if (!firstNumber) return 'İlk sayıyı seçin';
+    if (!selectedOperator) return 'İşlem seçin';
+    if (!secondNumber) {
+      // İkinci sayı seçilmediğinde, neden bazı sayıların kullanılamadığını açıkla
+      if (selectedOperator === '-') {
+        return `${firstNumber}'dan küçük veya eşit sayı seçin`;
+      } else if (selectedOperator === '/') {
+        return `${firstNumber}'ı tam bölen sayı seçin`;
+      } else {
+        return 'İkinci sayıyı seçin';
+      }
     }
-    
-    return true;
+    return 'Hesaplama yapılıyor...';
   };
 
   const handleClear = () => {
@@ -229,9 +289,9 @@ const GameScreen: React.FC = () => {
       const timer = setTimeout(() => {
         // Final result'ı hesapla
         const finalResult = gameState.closestResult || gameState.currentResult;
-        const timeUsed = 120 - gameState.timeLeft;
+        const timeUsed = gameSettings.timeLimit - gameState.timeLeft; // Dinamik süre hesaplama
         const score = finalResult ? calculateScore(gameState.target, finalResult, timeUsed) : 0;
-        
+
         // Skor kaydet (eğer kullanıcı giriş yapmışsa)
         if (currentUser && finalResult !== null) {
           const scoreData = {
@@ -244,7 +304,7 @@ const GameScreen: React.FC = () => {
             timeUsed: timeUsed,
             calculationHistory: gameState.bestCalculationHistory
           };
-          
+
           saveGameScore(scoreData)
             .then(docId => {
               console.log('Skor başarıyla kaydedildi, docId:', docId);
@@ -253,10 +313,10 @@ const GameScreen: React.FC = () => {
               console.error('Skor kaydedilirken hata:', error);
             });
         }
-        
+
         // Sonuç ekranına yönlendir
-        navigate('/result', { 
-          state: { 
+        navigate('/result', {
+          state: {
             target: gameState.target,
             userResult: finalResult,
             score: score,
@@ -264,13 +324,13 @@ const GameScreen: React.FC = () => {
             expression: gameState.userExpression,
             calculationHistory: gameState.bestCalculationHistory,
             isLoggedIn: !!currentUser
-          } 
+          }
         });
       }, 2000); // 2 saniye bekle
-      
+
       return () => clearTimeout(timer);
     }
-  }, [isGameOver, gameState, navigate, currentUser]);
+  }, [isGameOver, gameState, navigate, currentUser, gameSettings.timeLimit]);
 
   // Hedef sayıya ulaşıldığında otomatik sonuç ekranına geçiş
   useEffect(() => {
@@ -279,7 +339,7 @@ const GameScreen: React.FC = () => {
       const timer = setTimeout(() => {
         submitResult();
       }, 1000);
-      
+
       return () => clearTimeout(timer);
     }
   }, [gameState.currentResult, gameState.target, submitResult]);
@@ -315,7 +375,42 @@ const GameScreen: React.FC = () => {
 
   // Sayının kullanılabilir olup olmadığını kontrol et
   const isNumberAvailable = (number: any) => {
-    return !isNumberUsed(number) && !isGameOver;
+    if (isNumberUsed(number) || isGameOver) {
+      return false;
+    }
+
+    // Eğer ilk sayı ve operatör seçilmişse, ikinci sayı için kısıtlamaları kontrol et
+    if (firstNumber && selectedOperator && !secondNumber) {
+      const a = firstNumber;
+      const b = number.value;
+
+      switch (selectedOperator) {
+        case '+':
+          // Toplama işleminde herhangi bir kısıtlama yok
+          return true;
+
+        case '-':
+          // Çıkarma işleminde negatif sonuç vermemeli
+          return a >= b;
+
+        case '*':
+          // Çarpma işleminde herhangi bir kısıtlama yok
+          return true;
+
+        case '/':
+          // Bölme işleminde:
+          // 1. Sıfıra bölme olmamalı
+          // 2. Sonuç tam sayı olmalı
+          if (b === 0) return false;
+          const result = a / b;
+          return Number.isInteger(result);
+
+        default:
+          return true;
+      }
+    }
+
+    return true;
   };
 
   const getOperatorSymbol = (operator: string) => {
@@ -329,59 +424,64 @@ const GameScreen: React.FC = () => {
     }
   };
 
-  // Seçim durumuna göre mesaj
-  const getSelectionMessage = () => {
-    if (isGameOver) return 'Süre doldu! Sonuç ekranına yönlendiriliyorsunuz...';
-    if (!firstNumber) return 'İlk sayıyı seçin';
-    if (!selectedOperator) return 'İşlem seçin';
-    if (!secondNumber) return 'İkinci sayıyı seçin';
-    return '= tuşuna basın';
-  };
-
   return (
     <div className="game-screen">
+      {/* Oyun Header'ı */}
+      <div className="game-page-header">
+        <div className="header-left">
+          <button className="back-button" onClick={() => navigate('/')}>
+            ← Ana Menü
+          </button>
+          <h1 className="game-title">Bir İşlem</h1>
+        </div>
+        <div className="header-right">
+          <div className="clickable-avatar" onClick={handleAvatarClick}>
+            {currentUser ? (
+              currentUser.photoURL && !avatarError ? (
+                <img 
+                  src={currentUser.photoURL} 
+                  alt={currentUser.displayName || 'Kullanıcı'} 
+                  onError={handleAvatarError}
+                  onLoad={handleAvatarLoad}
+                />
+              ) : (
+                <div className="avatar-placeholder">
+                  {currentUser.displayName ? currentUser.displayName.charAt(0).toUpperCase() : 'U'}
+                </div>
+              )
+            ) : (
+              <div className="avatar-placeholder">
+                ?
+              </div>
+            )}
+          </div>
+          <button className="settings-button" onClick={handleOpenSettings} title="Oyun Ayarları">
+            ⚙️
+          </button>
+        </div>
+      </div>
+
+      {/* Oyun Header'ı (Hedef Sayı, İşlem Hakkı ve Süre) */}
       <div className="game-header">
         <div className="target-section">
           <div className="target-number">{gameState.target}</div>
         </div>
+        
+        {gameSettings.operationLimit > 0 && (
+          <div className="operation-limit-section">
+            <div className={`operation-limit-display ${gameState.calculationHistory.length >= gameSettings.operationLimit ? 'warning' : ''}`}>
+              <span className="operation-icon">🔢</span>
+              <span className="operation-text">
+                {gameSettings.operationLimit - gameState.calculationHistory.length} / {gameSettings.operationLimit}
+              </span>
+              <span className="operation-label">İşlem Hakkı</span>
+            </div>
+          </div>
+        )}
+        
         <div className="timer-section">
           <div className={`timer ${gameState.timeLeft <= 10 ? 'warning' : ''}`} style={{ color: getTimeColor() }}>
             {formatTime(gameState.timeLeft)}
-          </div>
-        </div>
-        <div className="user-section">
-          <div className="user-info">
-            {currentUser ? (
-              <>
-                <div className="user-avatar">
-                  {currentUser.photoURL ? (
-                    <img src={currentUser.photoURL} alt={currentUser.displayName} />
-                  ) : (
-                    <div className="avatar-placeholder">
-                      {currentUser.displayName.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </div>
-                <div className="user-details">
-                  <span className="user-name">{currentUser.displayName}</span>
-                  <span className="user-email">{currentUser.email}</span>
-                </div>
-                <button className="sign-out-button" onClick={handleSignOut}>
-                  Çıkış Yap
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="user-avatar">
-                  <div className="avatar-placeholder">
-                    ?
-                  </div>
-                </div>
-                <div className="user-details">
-                  <span className="user-name">Giriş Yapılmamış</span>
-                </div>
-              </>
-            )}
           </div>
         </div>
       </div>
@@ -418,82 +518,80 @@ const GameScreen: React.FC = () => {
                   key={`number-${number.id}`}
                   className={`number-button ${
                     isNumberUsed(number) ? 'used' : 
-                    isNumberSelected(number) ? 'selected' : ''
+                    isNumberSelected(number) ? 'selected' : 
+                    !isNumberAvailable(number) ? 'unavailable' : ''
                   } ${isCalculatedNumber(number) ? 'calculated' : ''}`}
                   onClick={() => isNumberAvailable(number) && handleNumberClick(number.value, number.id)}
-                  disabled={isNumberUsed(number) || isGameOver}
+                  disabled={!isNumberAvailable(number) || isGameOver}
                 >
                   {number.value}
                 </button>
               ))}
             </div>
-            
+
             <div className="operators-row">
-              <button 
+              <button
                 className={`operator-button ${selectedOperator === '+' ? 'selected' : ''}`}
                 onClick={() => handleOperatorClick('+')}
                 disabled={!firstNumber || isGameOver}
               >
                 +
               </button>
-              <button 
+              <button
                 className={`operator-button ${selectedOperator === '-' ? 'selected' : ''}`}
                 onClick={() => handleOperatorClick('-')}
                 disabled={!firstNumber || isGameOver}
               >
                 -
               </button>
-              <button 
+              <button
                 className={`operator-button ${selectedOperator === '*' ? 'selected' : ''}`}
                 onClick={() => handleOperatorClick('*')}
                 disabled={!firstNumber || isGameOver}
               >
                 ×
               </button>
-              <button 
+              <button
                 className={`operator-button ${selectedOperator === '/' ? 'selected' : ''}`}
                 onClick={() => handleOperatorClick('/')}
                 disabled={!firstNumber || isGameOver}
               >
                 ÷
               </button>
-              <button 
-                className={`operator-button equals ${selectedOperator === '=' ? 'selected' : ''}`}
-                onClick={() => handleOperatorClick('=')}
-                disabled={!isEqualsEnabled() || isGameOver}
-              >
-                =
-              </button>
-              <button 
-                className="operator-button clear"
+              <button
+                className="operator-button clear-selection"
                 onClick={handleClear}
                 disabled={isGameOver}
+                title="Seçimi Temizle"
               >
-                ←
+                ↺
               </button>
             </div>
 
             <div className="action-controls-row">
-              <button 
+              <button
                 className="control-button undo"
                 onClick={undoLastStep}
                 disabled={gameState.calculationHistory.length === 0 || isGameOver}
+                title="Son İşlemi Geri Al"
               >
-                ← Geri Al
+                ↶ Son İşlemi Geri Al
               </button>
-              <button 
+              <button
                 className="control-button clear-all"
                 onClick={clearAllCalculations}
                 disabled={gameState.calculationHistory.length === 0 || isGameOver}
+                title="Tüm İşlemleri Temizle"
               >
-                Tümünü Temizle
+                🗑️ Tümünü Temizle
               </button>
-              <button 
-                className="control-button submit" 
+              <button
+                className="control-button submit"
                 onClick={submitResult}
                 disabled={isGameOver}
+                title="Oyunu Bitir ve Sonucu Gönder"
               >
-                Sonucu Gönder
+                ✅ Sonucu Gönder
               </button>
             </div>
           </div>
@@ -518,7 +616,7 @@ const GameScreen: React.FC = () => {
                                 case '+': return a + b;
                                 case '-': return a - b;
                                 case '*': return a * b;
-                                case '/': 
+                                case '/':
                                   if (b === 0) return 'Hata';
                                   const result = a / b;
                                   return Number.isInteger(result) ? result : 'Geçersiz';
@@ -551,6 +649,23 @@ const GameScreen: React.FC = () => {
             </div>
         </div>
       </div>
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onSave={handleSaveSettings}
+        currentSettings={gameSettings}
+      />
+
+      {/* User Modal */}
+      <UserModal
+        isOpen={isUserModalOpen}
+        onClose={() => setIsUserModalOpen(false)}
+        onSignOut={handleSignOut}
+        onSignIn={handleGoogleSignIn}
+        user={currentUser}
+      />
     </div>
   );
 };
