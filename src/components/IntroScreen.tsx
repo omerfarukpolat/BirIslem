@@ -10,13 +10,11 @@ const IntroScreen: React.FC = () => {
 
   // Avatar resim yükleme hatası durumunda
   const handleAvatarError = () => {
-    console.log('IntroScreen: Avatar resmi yüklenemedi, placeholder gösteriliyor');
     setAvatarError(true);
   };
 
   // Avatar resim yükleme başarılı olduğunda
   const handleAvatarLoad = () => {
-    console.log('IntroScreen: Avatar resmi başarıyla yüklendi');
     setAvatarError(false);
   };
 

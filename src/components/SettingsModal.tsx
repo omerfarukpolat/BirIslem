@@ -66,13 +66,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   }, []);
 
   const handleOperationLimitChange = useCallback((value: number) => {
-    console.log('İşlem hakkı değiştiriliyor:', value, 'Mevcut:', settingsRef.current.operationLimit);
     // State'i doğrudan güncelle
     const newSettings = {
       ...settingsRef.current,
       operationLimit: value
     };
-    console.log('Yeni ayarlar:', newSettings);
     setSettings(newSettings);
   }, []);
 
@@ -143,13 +141,11 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             <div className="operation-limit-selector">
               {operationLimitOptions.map((option) => {
                 const isSelected = settings.operationLimit === option.value;
-                console.log(`Seçenek ${option.value}: ${isSelected ? 'seçili' : 'seçili değil'}`);
                 return (
                   <button
                     key={option.value}
                     className={`operation-option ${isSelected ? 'selected' : ''}`}
                     onClick={() => {
-                      console.log('Butona tıklandı:', option.value);
                       handleOperationLimitChange(option.value);
                     }}
                     style={{

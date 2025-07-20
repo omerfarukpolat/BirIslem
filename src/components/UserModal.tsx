@@ -18,13 +18,11 @@ const UserModal: React.FC<UserModalProps> = ({ isOpen, onClose, onSignOut, onSig
 
   // Avatar resim yükleme hatası durumunda
   const handleAvatarError = () => {
-    console.log('UserModal: Avatar resmi yüklenemedi, placeholder gösteriliyor');
     setAvatarError(true);
   };
 
   // Avatar resim yükleme başarılı olduğunda
   const handleAvatarLoad = () => {
-    console.log('UserModal: Avatar resmi başarıyla yüklendi');
     setAvatarError(false);
   };
 

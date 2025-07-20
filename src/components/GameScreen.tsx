@@ -34,13 +34,11 @@ const GameScreen: React.FC = () => {
 
   // Avatar resim yükleme hatası durumunda
   const handleAvatarError = () => {
-    console.log('Avatar resmi yüklenemedi, placeholder gösteriliyor');
     setAvatarError(true);
   };
 
   // Avatar resim yükleme başarılı olduğunda
   const handleAvatarLoad = () => {
-    console.log('Avatar resmi başarıyla yüklendi');
     setAvatarError(false);
   };
 
@@ -188,6 +186,16 @@ const GameScreen: React.FC = () => {
   };
 
   const handleNumberClick = (number: number, numberId: string) => {
+    // Aynı sayının tekrar seçilmesini engelle
+    if (firstNumberId === numberId || secondNumberId === numberId) {
+      return;
+    }
+
+    // Sayı kullanılmışsa seçilemez
+    if (gameState.usedNumbers.includes(numberId)) {
+      return;
+    }
+
     if (!firstNumber) {
       // İlk sayı seçimi
       setFirstNumber(number);
@@ -379,6 +387,11 @@ const GameScreen: React.FC = () => {
       return false;
     }
 
+    // Aynı sayının tekrar seçilmesini engelle
+    if (firstNumberId === number.id || secondNumberId === number.id) {
+      return false;
+    }
+
     // Eğer ilk sayı ve operatör seçilmişse, ikinci sayı için kısıtlamaları kontrol et
     if (firstNumber && selectedOperator && !secondNumber) {
       const a = firstNumber;
@@ -523,6 +536,12 @@ const GameScreen: React.FC = () => {
                   } ${isCalculatedNumber(number) ? 'calculated' : ''}`}
                   onClick={() => isNumberAvailable(number) && handleNumberClick(number.value, number.id)}
                   disabled={!isNumberAvailable(number) || isGameOver}
+                  title={
+                    isNumberUsed(number) ? 'Bu sayı kullanıldı' :
+                    isNumberSelected(number) ? 'Bu sayı seçili' :
+                    !isNumberAvailable(number) ? 'Bu sayı kullanılamaz' :
+                    'Bu sayıyı seç'
+                  }
                 >
                   {number.value}
                 </button>
@@ -575,7 +594,8 @@ const GameScreen: React.FC = () => {
                 disabled={gameState.calculationHistory.length === 0 || isGameOver}
                 title="Son İşlemi Geri Al"
               >
-                ↶ Son İşlemi Geri Al
+                <span className="desktop-text">↶ Son İşlemi Geri Al</span>
+                <span className="mobile-icon">↶</span>
               </button>
               <button
                 className="control-button clear-all"
@@ -583,7 +603,8 @@ const GameScreen: React.FC = () => {
                 disabled={gameState.calculationHistory.length === 0 || isGameOver}
                 title="Tüm İşlemleri Temizle"
               >
-                🗑️ Tümünü Temizle
+                <span className="desktop-text">🗑️ Tümünü Temizle</span>
+                <span className="mobile-icon">🗑️</span>
               </button>
               <button
                 className="control-button submit"
@@ -591,7 +612,8 @@ const GameScreen: React.FC = () => {
                 disabled={isGameOver}
                 title="Oyunu Bitir ve Sonucu Gönder"
               >
-                ✅ Sonucu Gönder
+                <span className="desktop-text">✅ Sonucu Gönder</span>
+                <span className="mobile-icon">✅</span>
               </button>
             </div>
           </div>
