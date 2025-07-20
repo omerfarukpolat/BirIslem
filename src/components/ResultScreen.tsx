@@ -52,17 +52,19 @@ const ResultScreen: React.FC = () => {
   };
 
   const getScoreMessage = (score: number): string => {
-    if (score >= 150) return 'Mükemmel! Harika bir performans!';
+    if (score >= 130) return 'Mükemmel! Harika bir performans!';
     if (score >= 100) return 'Çok iyi! Güzel bir sonuç!';
-    if (score >= 50) return 'İyi! Biraz daha pratik yapabilirsin.';
+    if (score >= 70) return 'İyi! Biraz daha pratik yapabilirsin.';
+    if (score >= 40) return 'Orta! Daha fazla çalışmaya ihtiyacın var.';
     return 'Tekrar denemeye ne dersin?';
   };
 
   const getScoreColor = (score: number): string => {
-    if (score >= 150) return '#27ae60';
+    if (score >= 130) return '#27ae60';
     if (score >= 100) return '#f39c12';
-    if (score >= 50) return '#e67e22';
-    return '#e74c3c';
+    if (score >= 70) return '#e67e22';
+    if (score >= 40) return '#e74c3c';
+    return '#c0392b';
   };
 
   const getOperatorSymbol = (operator: string) => {
@@ -76,8 +78,40 @@ const ResultScreen: React.FC = () => {
   };
 
   const difference = userResult ? Math.abs(target - userResult) : 0;
-  const accuracy = userResult ? Math.max(0, 100 - difference * 5) : 0; // 3 basamaklı için daha az ceza
-  const timeBonus = Math.max(0, 120 - timeUsed) * 1; // 2 dakika için ayarlandı
+  
+  // Yeni puanlama sistemi
+  let accuracyScore = 0;
+  if (difference === 0) {
+    accuracyScore = 100;
+  } else if (difference <= 10) {
+    accuracyScore = 95 - (difference * 1.5);
+  } else if (difference <= 50) {
+    accuracyScore = 80 - ((difference - 10) * 0.75);
+  } else if (difference <= 100) {
+    accuracyScore = 50 - ((difference - 50) * 0.6);
+  } else {
+    accuracyScore = Math.max(0, 20 - ((difference - 100) * 0.1));
+  }
+  
+  // Süre puanı (varsayılan 120 saniye için)
+  const timeLimit = 120; // Bu değer ayarlardan gelmeli
+  const timeRatio = timeUsed / timeLimit;
+  let timeScore = 0;
+  
+  if (timeRatio <= 0.25) {
+    timeScore = 50;
+  } else if (timeRatio <= 0.5) {
+    timeScore = 50 - ((timeRatio - 0.25) * 40);
+  } else if (timeRatio <= 0.75) {
+    timeScore = 40 - ((timeRatio - 0.5) * 60);
+  } else if (timeRatio <= 1) {
+    timeScore = 25 - ((timeRatio - 0.75) * 100);
+  } else {
+    timeScore = 0;
+  }
+  
+  const accuracy = Math.round(accuracyScore);
+  const timeBonus = Math.round(timeScore);
 
   return (
     <div className="result-screen">
@@ -92,6 +126,15 @@ const ResultScreen: React.FC = () => {
             <div className="score-message">
               {getScoreMessage(score)}
             </div>
+          </div>
+
+          <div className="action-buttons">
+            <button className="play-again-button" onClick={handlePlayAgain}>
+              Tekrar Oyna
+            </button>
+            <button className="intro-button" onClick={handleGoToIntro}>
+              Ana Menü
+            </button>
           </div>
 
           {/* Giriş yapmamış kullanıcılar için özel mesaj */}
@@ -162,15 +205,6 @@ const ResultScreen: React.FC = () => {
               <span>Toplam:</span>
               <span>{score} puan</span>
             </div>
-          </div>
-
-          <div className="action-buttons">
-            <button className="play-again-button" onClick={handlePlayAgain}>
-              Tekrar Oyna
-            </button>
-            <button className="intro-button" onClick={handleGoToIntro}>
-              Ana Menü
-            </button>
           </div>
         </div>
 

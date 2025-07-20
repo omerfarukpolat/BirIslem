@@ -298,7 +298,7 @@ const GameScreen: React.FC = () => {
         // Final result'ı hesapla
         const finalResult = gameState.closestResult || gameState.currentResult;
         const timeUsed = gameSettings.timeLimit - gameState.timeLeft; // Dinamik süre hesaplama
-        const score = finalResult ? calculateScore(gameState.target, finalResult, timeUsed) : 0;
+        const score = finalResult ? calculateScore(gameState.target, finalResult, timeUsed, gameSettings.timeLimit) : 0;
 
         // Skor kaydet (eğer kullanıcı giriş yapmışsa)
         if (currentUser && finalResult !== null) {
