@@ -12,7 +12,7 @@ const LeaderboardScreen: React.FC = () => {
   const { currentUser } = useAuth();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [period, setPeriod] = useState<LeaderboardPeriod>('daily');
-  const [sortType, setSortType] = useState<SortType>('bestScore');
+  const [sortType, setSortType] = useState<SortType>('totalScore');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userStats, setUserStats] = useState<any>(null);
