@@ -43,7 +43,7 @@ const ResultScreen: React.FC = () => {
       // 5 saniye sonra havai fişekleri durdur
       const timer = setTimeout(() => {
         setShowFireworks(false);
-      }, 5000);
+      }, 3000);
 
       return () => clearTimeout(timer);
     }

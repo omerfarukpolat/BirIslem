@@ -4,7 +4,7 @@ import { Operator } from '../types/game';
 export const generateRandomNumbers = (): number[] => {
   const smallNumbers: number[] = [];
   const bigNumbers: number[] = [];
-  
+
   // 5 adet küçük sayı (1-9)
   while (smallNumbers.length < 5) {
     const randomNum = Math.floor(Math.random() * 9) + 1;
@@ -12,11 +12,11 @@ export const generateRandomNumbers = (): number[] => {
       smallNumbers.push(randomNum);
     }
   }
-  
+
   // 1 adet büyük sayı (10-99)
   const bigNumber = Math.floor(Math.random() * 90) + 10;
   bigNumbers.push(bigNumber);
-  
+
   return [...smallNumbers, ...bigNumbers];
 };
 
@@ -54,11 +54,12 @@ export const evaluateExpression = (expression: string): number | null => {
 };
 
 // Puan hesaplama - Optimize edilmiş sistem
+
 export const calculateScore = (target: number, userResult: number, timeUsed: number, timeLimit: number = 120): number => {
   // 1. Doğruluk Puanı (0-150 arası) - Ana faktör
   const difference = Math.abs(target - userResult);
   let accuracyScore = 0;
-  
+
   if (difference === 0) {
     // Tam isabet: 150 puan (en yüksek)
     accuracyScore = 150;
@@ -87,11 +88,11 @@ export const calculateScore = (target: number, userResult: number, timeUsed: num
     // 60+ fark: 0-10 puan
     accuracyScore = Math.max(0, 10 - ((difference - 60) * 0.1));
   }
-  
+
   // 2. Süre Çarpanı (0.7-1.3 arası) - Doğruluk puanını etkileyen multiplier
   const timeRatio = Math.min(timeUsed / timeLimit, 1.2); // Max 1.2 ile sınırla
   let timeMultiplier = 1.0;
-  
+
   if (timeRatio <= 0.25) {
     // Çok hızlı (0-25% süre): 1.3x multiplier
     timeMultiplier = 1.3;
@@ -111,27 +112,31 @@ export const calculateScore = (target: number, userResult: number, timeUsed: num
     // Süre aştı: 0.7x multiplier
     timeMultiplier = Math.max(0.7, 1.0 - ((timeRatio - 1.0) * 1.5));
   }
-  
+
   // 3. Temel puan hesaplama
   let baseScore = accuracyScore * timeMultiplier;
-  
-  // 4. Mükemmellik Bonusu (sadece tam isabet için)
+
+  // 4. Mükemmellik Bonusu (sadece tam isabet için, süreye göre değişken)
   let perfectionBonus = 0;
   if (difference === 0) {
-    if (timeRatio <= 0.3) {
-      perfectionBonus = 25; // Mükemmel + çok hızlı
-    } else if (timeRatio <= 0.5) {
-      perfectionBonus = 15; // Mükemmel + hızlı
-    } else if (timeRatio <= 0.7) {
-      perfectionBonus = 10; // Mükemmel + orta
+    if (timeRatio <= 0.15) {
+      perfectionBonus = 30; // Mükemmel + süper hızlı (0-18s)
+    } else if (timeRatio <= 0.25) {
+      perfectionBonus = 25; // Mükemmel + çok hızlı (18-30s)
+    } else if (timeRatio <= 0.4) {
+      perfectionBonus = 20; // Mükemmel + hızlı (30-48s)
+    } else if (timeRatio <= 0.6) {
+      perfectionBonus = 15; // Mükemmel + orta (48-72s)
+    } else if (timeRatio <= 0.8) {
+      perfectionBonus = 10; // Mükemmel + biraz yavaş (72-96s)
     } else {
-      perfectionBonus = 5; // Sadece mükemmel
+      perfectionBonus = 5; // Mükemmel ama yavaş (96s+)
     }
   }
-  
-  // 5. Toplam puan (maksimum ~220)
+
+  // 5. Toplam puan (maksimum ~225)
   const totalScore = Math.round(baseScore + perfectionBonus);
-  
+
   return Math.max(0, totalScore);
 };
 
@@ -139,7 +144,7 @@ export const calculateScore = (target: number, userResult: number, timeUsed: num
 export const initializeGame = () => {
   const numbers = generateRandomNumbers();
   const target = generateTargetNumber();
-  
+
   return {
     numbers,
     target,
@@ -150,4 +155,4 @@ export const initializeGame = () => {
     isGameActive: true,
     currentScreen: 'game' as const
   };
-}; 
+};
