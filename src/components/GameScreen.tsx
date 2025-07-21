@@ -483,7 +483,22 @@ const GameScreen: React.FC = () => {
         <div className="current-result-section">
           <h3>Mevcut Sonuç:</h3>
           <div className="current-result-display">
-            {gameState.currentResult !== null ? gameState.currentResult : 'Henüz işlem yapılmadı'}
+            {gameState.currentResult !== null ? (
+              (() => {
+                const currentDifference = Math.abs(gameState.target - gameState.currentResult);
+                const closestDifference = gameState.closestDifference || 0;
+                
+                // Eğer mevcut fark en yakın farkla aynıysa sadece sonucu göster
+                if (currentDifference === closestDifference) {
+                  return gameState.currentResult;
+                }
+                
+                // Farklıysa farkı da göster
+                return `${gameState.currentResult} (Fark: ${currentDifference})`;
+              })()
+            ) : (
+              'Henüz işlem yapılmadı'
+            )}
           </div>
         </div>
 
