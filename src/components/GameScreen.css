@@ -1646,3 +1646,23 @@
     opacity: 1;
   }
 }
+
+/* Desktop ve Mobile görünüm için text/icon yönetimi */
+.desktop-text {
+  display: inline;
+}
+
+.mobile-icon {
+  display: none;
+}
+
+/* Mobil görünümde sadece emojiler gözüksün */
+@media (max-width: 768px) {
+  .desktop-text {
+    display: none;
+  }
+  
+  .mobile-icon {
+    display: inline;
+  }
+}
