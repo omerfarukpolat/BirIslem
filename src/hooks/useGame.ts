@@ -233,8 +233,6 @@ export const useGame = () => {
       // En yakın sonucu yeniden hesapla
       let newClosestResult = null;
       let newClosestDifference = null;
-      let newBestResult = null;
-      let newBestCalculationHistory: CalculationStep[] = [];
       
       if (newHistory.length > 0) {
         const allResults = newHistory.map(step => step.result);
@@ -242,11 +240,26 @@ export const useGame = () => {
         const minDifferenceIndex = differences.indexOf(Math.min(...differences));
         newClosestResult = allResults[minDifferenceIndex];
         newClosestDifference = differences[minDifferenceIndex];
+      }
+      
+      // En iyi sonuç geçmişini koru - sadece mevcut hesaplama geçmişinde
+      // daha iyi bir sonuç varsa güncelle, yoksa mevcut olanı koru
+      let newBestResult = prev.bestResult;
+      let newBestCalculationHistory = prev.bestCalculationHistory;
+      
+      if (newHistory.length > 0) {
+        const allResults = newHistory.map(step => step.result);
+        const differences = allResults.map(result => Math.abs(prev.target - result));
+        const minDifferenceIndex = differences.indexOf(Math.min(...differences));
+        const currentBestDifference = Math.abs(prev.target - (prev.bestResult || 0));
+        const newBestDifference = differences[minDifferenceIndex];
         
-        // En iyi sonucu yeniden hesapla
-        const bestDifferenceIndex = differences.indexOf(Math.min(...differences));
-        newBestResult = allResults[bestDifferenceIndex];
-        newBestCalculationHistory = newHistory.slice(0, bestDifferenceIndex + 1);
+        // Eğer yeni hesaplama geçmişinde daha iyi bir sonuç varsa güncelle
+        if (newBestDifference < currentBestDifference) {
+          newBestResult = allResults[minDifferenceIndex];
+          newBestCalculationHistory = newHistory.slice(0, minDifferenceIndex + 1);
+        }
+        // Aksi takdirde mevcut en iyi sonucu koru
       }
       
       return {
@@ -277,7 +290,10 @@ export const useGame = () => {
         currentResult: null,
         calculationHistory: [],
         availableNumbers: originalNumbersWithIds,
-        usedNumbers: []
+        usedNumbers: [],
+        // En iyi sonuç geçmişini koru
+        bestResult: prev.bestResult,
+        bestCalculationHistory: prev.bestCalculationHistory
       };
     });
   }, []);

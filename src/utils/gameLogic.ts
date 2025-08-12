@@ -134,8 +134,14 @@ export const calculateScore = (target: number, userResult: number, timeUsed: num
     }
   }
 
-  // 5. Toplam puan (maksimum ~225)
-  const totalScore = Math.round(baseScore + perfectionBonus);
+  // 5. Tam Sonuç Bonusu (sadece tam isabet için, sabit +20 puan)
+  let exactMatchBonus = 0;
+  if (difference === 0) {
+    exactMatchBonus = 20; // Tam sonuç için sabit bonus
+  }
+
+  // 6. Toplam puan (maksimum ~245)
+  const totalScore = Math.round(baseScore + perfectionBonus + exactMatchBonus);
 
   return Math.max(0, totalScore);
 };
