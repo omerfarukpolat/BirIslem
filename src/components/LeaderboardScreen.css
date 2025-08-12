@@ -976,3 +976,52 @@
     opacity: 1;
   }
 }
+
+/* Performans Modu - Güçsüz Cihazlar İçin */
+.low-performance .leaderboard-screen::before {
+  /* Arka plan float animasyonunu kaldır */
+  display: none !important;
+}
+
+.low-performance .leaderboard-container {
+  /* Ana container animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .leaderboard-title {
+  /* Başlık animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .leaderboard-list {
+  /* Liste animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .leaderboard-item {
+  /* Liste öğesi animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .back-button {
+  /* Geri butonu animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .floating-elements {
+  /* Float elementleri animasyonlarını kaldır */
+  animation: none !important;
+}
+
+/* Güçsüz cihazlarda sadece temel hover efektleri */
+.low-performance button:hover,
+.low-performance .leaderboard-item:hover {
+  transform: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Güçsüz cihazlarda backdrop-filter'ı kaldır */
+.low-performance * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}

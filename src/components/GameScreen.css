@@ -1666,3 +1666,79 @@
     display: inline;
   }
 }
+
+/* Performans Modu - Güçsüz Cihazlar İçin */
+.low-performance .game-screen::before {
+  /* Arka plan float animasyonunu kaldır */
+  display: none !important;
+}
+
+.low-performance .game-page-header {
+  /* Header animasyonunu kaldır */
+  animation: none !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.low-performance .back-button::before,
+.low-performance .settings-button::before,
+.low-performance .user-avatar::before {
+  /* Hover shine efektlerini kaldır */
+  display: none !important;
+}
+
+.low-performance .timer-display {
+  /* Timer animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .score-display {
+  /* Skor animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .number-button {
+  /* Sayı buton animasyonlarını kaldır */
+  animation: none !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.low-performance .operator-button {
+  /* Operatör buton animasyonlarını kaldır */
+  animation: none !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.low-performance .control-button {
+  /* Kontrol buton animasyonlarını kaldır */
+  animation: none !important;
+  transition: background-color 0.2s ease !important;
+}
+
+.low-performance .calculation-display {
+  /* Hesaplama ekranı animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .history-section {
+  /* Geçmiş bölümü animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .closest-result-section {
+  /* En yakın sonuç animasyonlarını kaldır */
+  animation: none !important;
+}
+
+/* Güçsüz cihazlarda sadece temel hover efektleri */
+.low-performance .number-button:hover,
+.low-performance .operator-button:hover,
+.low-performance .control-button:hover {
+  transform: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Güçsüz cihazlarda backdrop-filter'ı kaldır */
+.low-performance .game-page-header {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}

@@ -455,3 +455,51 @@
     font-size: 0.85rem;
   }
 }
+
+/* Performans Modu - Güçsüz Cihazlar İçin */
+.low-performance .intro-screen::before {
+  /* Arka plan float animasyonunu kaldır */
+  display: none !important;
+}
+
+.low-performance .intro-container {
+  /* Ana container animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .game-title {
+  /* Başlık animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .game-description {
+  /* Açıklama animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .start-button {
+  /* Başlat butonu animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .leaderboard-button {
+  /* Liderlik tablosu butonu animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .floating-elements {
+  /* Float elementleri animasyonlarını kaldır */
+  animation: none !important;
+}
+
+/* Güçsüz cihazlarda sadece temel hover efektleri */
+.low-performance button:hover {
+  transform: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Güçsüz cihazlarda backdrop-filter'ı kaldır */
+.low-performance * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}

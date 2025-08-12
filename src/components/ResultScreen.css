@@ -565,3 +565,51 @@
     text-shadow: 0 0 30px currentColor, 0 4px 20px rgba(148, 163, 184, 0.2);
   }
 }
+
+/* Performans Modu - Güçsüz Cihazlar İçin */
+.low-performance .result-screen::before {
+  /* Arka plan float animasyonunu kaldır */
+  display: none !important;
+}
+
+.low-performance .result-container {
+  /* Ana container animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .score-display {
+  /* Skor animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .result-details {
+  /* Sonuç detayları animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .action-buttons {
+  /* Aksiyon butonları animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .calculation-history {
+  /* Hesaplama geçmişi animasyonlarını kaldır */
+  animation: none !important;
+}
+
+.low-performance .floating-elements {
+  /* Float elementleri animasyonlarını kaldır */
+  animation: none !important;
+}
+
+/* Güçsüz cihazlarda sadece temel hover efektleri */
+.low-performance button:hover {
+  transform: none !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Güçsüz cihazlarda backdrop-filter'ı kaldır */
+.low-performance * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}

@@ -296,3 +296,76 @@ input:focus-visible {
   background: rgba(100, 116, 139, 0.2);
   color: #1e293b;
 }
+
+/* Performans Modu - Güçsüz Cihazlar İçin */
+.low-performance * {
+  /* Tüm animasyonları devre dışı bırak */
+  animation: none !important;
+  transition: none !important;
+}
+
+.low-performance .App {
+  /* Arka plan animasyonlarını kaldır */
+  background: #f8fafc !important;
+}
+
+.low-performance .App::before {
+  /* Arka plan gradient animasyonunu kaldır */
+  display: none !important;
+}
+
+.low-performance .App::after {
+  /* Arka plan gradient animasyonunu kaldır */
+  display: none !important;
+}
+
+/* Güçsüz cihazlarda sadece gerekli animasyonları koru */
+.low-performance .fade-in {
+  animation: fadeIn 0.3s ease-out !important;
+}
+
+.low-performance .slide-in {
+  animation: slideInFromLeft 0.3s ease-out !important;
+}
+
+/* Güçsüz cihazlarda hover efektlerini basitleştir */
+.low-performance button:hover,
+.low-performance .clickable:hover {
+  transform: none !important;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Güçsüz cihazlarda backdrop-filter'ı kaldır */
+.low-performance * {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+/* GPU Hızlandırma Optimizasyonları */
+.low-performance .number-button,
+.low-performance .operator-button,
+.low-performance .control-button {
+  /* GPU hızlandırma için transform kullan */
+  will-change: auto !important;
+  transform: translateZ(0) !important;
+  backface-visibility: hidden !important;
+}
+
+/* Güçsüz cihazlarda sadece temel geçişler */
+.low-performance .number-button,
+.low-performance .operator-button,
+.low-performance .control-button {
+  transition: background-color 0.15s ease, box-shadow 0.15s ease !important;
+}
+
+/* Güçsüz cihazlarda hover efektlerini optimize et */
+.low-performance button:hover {
+  background-color: #e2e8f0 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Güçsüz cihazlarda focus efektlerini basitleştir */
+.low-performance button:focus {
+  outline: 2px solid #3b82f6 !important;
+  outline-offset: 2px !important;
+}
