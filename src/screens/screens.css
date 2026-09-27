@@ -1,3 +1,7 @@
+.setup__lead {
+  color: var(--ink-2);
+}
+
 .result-stack {
   display: grid;
   gap: 14px;

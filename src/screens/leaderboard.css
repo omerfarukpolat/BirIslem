@@ -159,3 +159,7 @@
   font-size: 13px;
   text-align: center;
 }
+
+.lb-list.is-loading {
+  opacity: 0.7;
+}

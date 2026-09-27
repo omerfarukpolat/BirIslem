@@ -1,3 +1,18 @@
+.party-stack {
+  display: grid;
+  gap: 18px;
+}
+
+/* Karşılıklı modların ortak "genel durum" bloğu (aynı cihaz + çevrimiçi) */
+.party-standings {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding-top: 14px;
+  border-top: 2px solid var(--line);
+  text-align: left;
+}
+
 .summary {
   display: grid;
   gap: 14px;

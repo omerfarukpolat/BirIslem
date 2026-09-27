@@ -3,10 +3,6 @@
   gap: 22px;
 }
 
-.setup__lead {
-  color: var(--ink-2);
-}
-
 .setup__group {
   display: grid;
   gap: 10px;
@@ -106,16 +102,4 @@
 .handoff__order li.is-now {
   border-color: var(--ink);
   color: var(--ink);
-}
-
-.party-stack {
-  display: grid;
-  gap: 18px;
-}
-
-.party-standings {
-  display: grid;
-  gap: 6px;
-  width: 100%;
-  text-align: left;
 }

@@ -28,6 +28,12 @@ test('daily puzzle allows a single attempt and survives a reload', async ({ page
   await expect(page.locator('.status__value')).not.toContainText('henüz yok');
   await finish(page);
   await expect(page.locator('.scorecard')).toBeVisible();
+  // Puan hesaplanmadan hemen yenilense bile sonuç korunur, yeni deneme açılmaz
+  await page.reload();
+  await expect(page.locator('.scorecard, .daily-done')).toBeVisible();
+  await expect(page.getByRole('button', { name: /Başla/ })).toHaveCount(0);
+  // Puan hesaplanınca günlük kayıt yazılır; sonraki açılışta özet görünür
+  await expect(page.locator('.scorecard__parts, .daily-done')).toBeVisible();
   await page.reload();
   await expect(page.locator('.daily-done')).toContainText('Bugünkü sonucun');
   await expect(page.getByRole('button', { name: /Paylaş/ })).toBeEnabled();
