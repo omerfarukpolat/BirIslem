@@ -11,7 +11,7 @@ export const firebaseConfig = {
   measurementId: env.REACT_APP_FIREBASE_MEASUREMENT_ID as string | undefined,
 };
 
-/** Yerel geliştirme / testler için Firebase Emulator Suite */
-export const useEmulators = env.REACT_APP_USE_EMULATORS === 'true';
+/** Yerel geliştirme / testler için Firebase Emulator Suite (derleme anında sabit) */
+export const useEmulators: boolean = __USE_EMULATORS__;
 
 export const firebaseEnabled = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);

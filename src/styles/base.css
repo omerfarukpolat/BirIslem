@@ -484,3 +484,9 @@ dialog.sheet::backdrop {
   grid-template-columns: 1fr 1fr;
   gap: 10px;
 }
+
+@media (min-width: 900px) and (min-height: 760px) {
+  .page {
+    max-width: 640px;
+  }
+}

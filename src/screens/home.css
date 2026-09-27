@@ -222,3 +222,53 @@ a.mode:active {
     gap: 28px;
   }
 }
+
+/* ---------- Masaüstü: solda başlık, sağda modlar ---------- */
+@media (min-width: 960px) {
+  .page.home {
+    max-width: 1120px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'bar bar'
+      'hero modes'
+      'links modes'
+      'stats modes';
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: 72px;
+    row-gap: 24px;
+    align-items: start;
+    padding-bottom: 48px;
+  }
+
+  .home__bar {
+    grid-area: bar;
+  }
+
+  .hero {
+    grid-area: hero;
+    padding-top: 48px;
+    gap: 20px;
+  }
+
+  .hero h1 {
+    font-size: 104px;
+  }
+
+  .hero p {
+    font-size: 18px;
+  }
+
+  .modes {
+    grid-area: modes;
+    padding-top: 56px;
+  }
+
+  .home__links {
+    grid-area: links;
+  }
+
+  .mystats {
+    grid-area: stats;
+    max-width: 460px;
+  }
+}

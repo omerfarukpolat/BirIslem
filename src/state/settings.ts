@@ -39,6 +39,11 @@ effect(() => {
   applyTheme(theme.value);
 });
 
+if (typeof window !== 'undefined') {
+  // Sistem teması değişince tarayıcı çubuğunun rengi de değişsin
+  matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', () => applyTheme(theme.value));
+}
+
 function applyTheme(t: Theme) {
   if (typeof document === 'undefined') return;
   const root = document.documentElement;

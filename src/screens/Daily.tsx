@@ -22,6 +22,8 @@ interface Progress {
   key: string;
   startedAt: number;
   best: Best | null;
+  /** Tur bittiyse sonucu; günlük kayıt yazılana kadar saklanır */
+  outcome?: RoundOutcome;
 }
 
 type View = 'intro' | 'play' | 'result';
@@ -33,9 +35,11 @@ export default function Daily() {
   const record = stats.value.daily[key];
   const saved = readJSON<Progress | null>(PROGRESS_KEY, null);
   const resumable = !record && saved?.key === key ? saved : null;
-  const [view, setView] = useState<View>(record ? 'result' : resumable ? 'play' : 'intro');
+  const [view, setView] = useState<View>(record || resumable?.outcome ? 'result' : resumable ? 'play' : 'intro');
   const [progress, setProgress] = useState<Progress | null>(resumable);
-  const [outcome, setOutcome] = useState<RoundOutcome | null>(null);
+  // Sayfa açılırken yarım kalmış bir deneme bulunduysa
+  const [resumed] = useState(resumable !== null);
+  const [outcome, setOutcome] = useState<RoundOutcome | null>(resumable?.outcome ?? null);
 
   useEffect(() => {
     let alive = true;
@@ -53,7 +57,8 @@ export default function Daily() {
   };
 
   const finish = (o: RoundOutcome) => {
-    removeKey(PROGRESS_KEY);
+    // Sonuç hemen kalıcı olsun: puan hesaplanmadan yenilense bile ikinci hak doğmaz.
+    writeJSON(PROGRESS_KEY, { ...progress, outcome: o });
     setOutcome(o);
     setView('result');
   };
@@ -69,7 +74,7 @@ export default function Daily() {
       ) : view === 'intro' ? (
         <Intro dayKey={key} onStart={start} />
       ) : view === 'play' && progress ? (
-        <Play puzzle={puzzle} progress={progress} onFinish={finish} />
+        <Play puzzle={puzzle} progress={progress} resumed={resumed} onFinish={finish} />
       ) : (
         <Result dayKey={key} puzzle={puzzle} outcome={outcome} record={record ?? null} />
       )}
@@ -113,11 +118,20 @@ function Intro({ dayKey, onStart }: { dayKey: string; onStart: () => void }) {
   );
 }
 
-function Play({ puzzle, progress, onFinish }: { puzzle: Puzzle; progress: Progress; onFinish: (o: RoundOutcome) => void }) {
+function Play({
+  puzzle,
+  progress,
+  resumed,
+  onFinish,
+}: {
+  puzzle: Puzzle;
+  progress: Progress;
+  resumed: boolean;
+  onFinish: (o: RoundOutcome) => void;
+}) {
   // Kalan süreyi duvar saatinden hesapla: yenileme ek süre kazandırmaz.
   const startAt = useMemo(() => performance.now() + (progress.startedAt - Date.now()), [progress]);
   const expired = Date.now() - progress.startedAt >= DAILY_TIME_LIMIT * 1000;
-  const resumed = Date.now() > progress.startedAt + 1500;
 
   useEffect(() => {
     if (!expired) return;
@@ -161,17 +175,20 @@ function Result({
   const solution = useSolution(puzzle);
   const score = useRoundScore(outcome, solution, DAILY_TIME_LIMIT * 1000);
 
-  // Bu oturumda oynandıysa kaydet
+  // Puan hesaplanınca günlük kaydı yaz, yarım deneme kaydını temizle
   useEffect(() => {
-    if (!outcome || !score || record) return;
-    recordDaily({
-      key: dayKey,
-      value: outcome.value,
-      diff: outcome.diff,
-      reachedAtMs: outcome.reachedAtMs,
-      score: score.total,
-      steps: outcome.steps,
-    });
+    if (!outcome || !score) return;
+    if (!record) {
+      recordDaily({
+        key: dayKey,
+        value: outcome.value,
+        diff: outcome.diff,
+        reachedAtMs: outcome.reachedAtMs,
+        score: score.total,
+        steps: outcome.steps,
+      });
+    }
+    removeKey(PROGRESS_KEY);
   }, [outcome, score, record]);
 
   const payload = useMemo(

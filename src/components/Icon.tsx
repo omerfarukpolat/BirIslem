@@ -160,20 +160,27 @@ export function GoogleMark({ size = 20 }: { size?: number }) {
   );
 }
 
-/** Logodaki "1" ve dört işlem işareti */
+/** Logodaki "1" ve dört işlem işareti (public/favicon.svg ile aynı çizim) */
 export function LogoMark({ size = 40, title }: { size?: number; title?: string }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 64 64" role={title ? 'img' : undefined} aria-hidden={title ? undefined : 'true'}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="6 5 50 54"
+      role={title ? 'img' : undefined}
+      aria-hidden={title ? undefined : 'true'}
+      focusable="false"
+    >
       {title && <title>{title}</title>}
-      <path d="M22 12l-9 5.2v6.4l8-4.4V52h8.5V12z" fill="currentColor" />
-      <g stroke="currentColor" stroke-width="4.2" stroke-linecap="round" fill="none">
-        <path d="M40 13h14M47 6v14" />
-        <path d="M40 28.5h14" />
-        <path d="M42 37l10 10M52 37l-10 10" />
-        <path d="M40 57.5h14" />
+      <path d="M17.5 12H27.5V52H17.5V22L9.5 26.5V18.5Z" fill="currentColor" />
+      <g fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round">
+        <path d="M40 13.5H50M45 8.5V18.5" />
+        <path d="M40 26H50" />
+        <path d="M41.3 34.2L48.7 41.6M48.7 34.2L41.3 41.6" />
+        <path d="M40 50.5H50" />
       </g>
-      <circle cx="47" cy="52.5" r="2.4" fill="currentColor" />
-      <circle cx="47" cy="62" r="2.4" fill="currentColor" />
+      <circle cx="45" cy="46.2" r="1.9" fill="currentColor" />
+      <circle cx="45" cy="54.8" r="1.9" fill="currentColor" />
     </svg>
   );
 }

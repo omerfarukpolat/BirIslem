@@ -553,3 +553,51 @@
     display: none;
   }
 }
+
+/* ---------- Masaüstü: daha büyük tahta ---------- */
+@media (min-width: 900px) and (min-height: 760px) {
+  .round {
+    gap: 16px;
+  }
+
+  .board {
+    padding: 12px 18px 0;
+  }
+
+  .board__digits {
+    height: 150px;
+    gap: 12px;
+  }
+
+  .flap {
+    width: 104px;
+    font-size: 104px;
+  }
+
+  .timebar {
+    margin: 0 -18px;
+  }
+
+  .tile {
+    height: 88px;
+    font-size: 46px;
+  }
+
+  .op {
+    height: 72px;
+    font-size: 44px;
+  }
+
+  .actions .btn {
+    min-height: 58px;
+    font-size: 17px;
+  }
+
+  .status__value {
+    font-size: 34px;
+  }
+
+  .hint__expr {
+    font-size: 30px;
+  }
+}

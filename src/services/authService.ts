@@ -1,6 +1,7 @@
 import {
   GoogleAuthProvider,
   connectAuthEmulator,
+  signInWithCredential,
   getAuth,
   onAuthStateChanged,
   signInAnonymously,
@@ -19,7 +20,19 @@ export function authInstance(): Auth {
   if (!auth) {
     auth = getAuth(firebaseApp());
     auth.languageCode = 'tr';
-    if (useEmulators) connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+    if (useEmulators) {
+      connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+      // Yalnızca emülatör derlemesinde: uçtan uca testler için açılır pencere olmadan Google girişi.
+      // Üretim derlemesinde useEmulators sabiti false olduğundan bu blok paketten çıkarılır.
+      const a = auth;
+      (window as unknown as Record<string, unknown>).__emulatorGoogleSignIn = (name: string) =>
+        signInWithCredential(
+          a,
+          GoogleAuthProvider.credential(
+            JSON.stringify({ sub: name, email: `${name.replace(/\W/g, '').toLowerCase()}@example.com`, email_verified: true, name }),
+          ),
+        );
+    }
   }
   return auth;
 }

@@ -70,14 +70,8 @@ export default function Home() {
       </section>
 
       <nav class="modes" aria-label="Oyun modları">
-        <a
-          class="mode mode--solo"
-          href="/game"
-          onClick={(e) => {
-            e.preventDefault();
-            route('/game');
-          }}
-        >
+        {/* <a> tıklamalarını preact-iso yönlendirir */}
+        <a class="mode mode--solo" href="/game">
           <span class="mode__badge num">1</span>
           <span class="mode__text">
             <span class="mode__title">Tek başına</span>
@@ -89,14 +83,7 @@ export default function Home() {
           <Icon name="arrow" class="mode__arrow" />
         </a>
 
-        <a
-          class="mode mode--daily"
-          href="/gunun-sorusu"
-          onClick={(e) => {
-            e.preventDefault();
-            route('/gunun-sorusu');
-          }}
-        >
+        <a class="mode mode--daily" href="/gunun-sorusu">
           <span class="mode__badge num">{Number(today.slice(8))}</span>
           <span class="mode__text">
             <span class="mode__title">Günün sorusu</span>
