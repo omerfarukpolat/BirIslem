@@ -1,0 +1,102 @@
+.daily-intro {
+  display: grid;
+  gap: 20px;
+  padding-top: 8px;
+}
+
+.daily-date {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.daily-date__day {
+  display: grid;
+  place-items: center;
+  width: 88px;
+  height: 88px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-lg);
+  background: var(--amber);
+  color: #13273e;
+  font-size: 56px;
+  line-height: 1;
+  box-shadow: 0 4px 0 var(--shadow);
+}
+
+.daily-date__rest {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 26px;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--ink-2);
+}
+
+.daily-intro h2 {
+  font-size: 40px;
+  line-height: 0.98;
+}
+
+.daily-rules {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.daily-rules li {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 10px;
+  align-items: start;
+}
+
+.daily-rules svg {
+  margin-top: 1px;
+  color: var(--tomato);
+}
+
+.daily-streak {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  background: var(--amber-soft);
+  font-weight: 600;
+}
+
+.daily-done {
+  display: grid;
+  gap: 8px;
+  padding: 18px 20px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  box-shadow: 0 4px 0 var(--shadow);
+}
+
+.daily-done__score {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 76px;
+  line-height: 0.9;
+}
+
+.daily-done__score span {
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.next-daily {
+  text-align: center;
+  color: var(--ink-2);
+}
+
+.next-daily b {
+  font-size: 22px;
+  color: var(--ink);
+}

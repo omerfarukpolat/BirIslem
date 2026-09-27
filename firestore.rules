@@ -2,15 +2,120 @@ rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Scores koleksiyonu için kurallar
-    match /scores/{document} {
-      // Herkes okuyabilir (leaderboard için)
-      allow read: if true;
-      // Sadece giriş yapmış kullanıcılar yazabilir
-      allow write: if request.auth != null;
+
+    function signedIn() {
+      return request.auth != null;
     }
-    
-    // Diğer koleksiyonlar için varsayılan kural - erişim yok
+
+    function realUser() {
+      return signedIn() && request.auth.token.firebase.sign_in_provider != 'anonymous';
+    }
+
+    // ---------- Skorlar (sıralama) ----------
+    match /scores/{scoreId} {
+      // Sıralama herkese açık
+      allow read: if true;
+      // Yalnızca Google ile giriş yapmış kullanıcı, kendi adına ve makul bir skorla yazabilir.
+      // Güncelleme/silme yok: günün sorusu belgesi (daily_<gün>_<uid>) tek sefer oluşturulabilir.
+      allow create: if realUser()
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.score is number
+        && request.resource.data.score >= 0
+        && request.resource.data.score <= 300
+        && (!scoreId.matches('daily_.*') || scoreId == 'daily_' + request.resource.data.puzzleId + '_' + request.auth.uid);
+      allow update, delete: if false;
+    }
+
+    // ---------- Çevrimiçi odalar ----------
+    function roomPath(code) {
+      return /databases/$(database)/documents/rooms/$(code);
+    }
+
+    function playerPath(code, uid) {
+      return /databases/$(database)/documents/rooms/$(code)/players/$(uid);
+    }
+
+    function isMember(code) {
+      return exists(playerPath(code, request.auth.uid));
+    }
+
+    // Oda sahibi odadan çıktıysa ya da 45 sn'dir sinyal vermiyorsa
+    function hostGone(code, hostUid) {
+      return !exists(playerPath(code, hostUid))
+        || get(playerPath(code, hostUid)).data.lastSeen < request.time - duration.value(45, 's');
+    }
+
+    function validSettings(d) {
+      return d.rounds is int && d.rounds >= 1 && d.rounds <= 20
+        && d.timeLimit is int && d.timeLimit >= 15 && d.timeLimit <= 600
+        && d.round is int && d.round >= 0 && d.round <= d.rounds
+        && d.puzzles is list && d.puzzles.size() <= d.rounds;
+    }
+
+    match /rooms/{code} {
+      // Kodu bilen okuyabilir; odalar listelenemez.
+      allow get: if signedIn();
+      allow list: if false;
+
+      allow create: if signedIn()
+        && code.matches('^[A-Z0-9]{5}$')
+        && request.resource.data.code == code
+        && request.resource.data.hostUid == request.auth.uid
+        && request.resource.data.status == 'lobby'
+        && request.resource.data.game == 1
+        && request.resource.data.round == 0
+        && validSettings(request.resource.data);
+
+      allow update: if signedIn()
+        && request.resource.data.code == resource.data.code
+        && validSettings(request.resource.data)
+        && (
+          // Oda sahibi her şeyi yönetir (sahipliği başkasına veremez)
+          (resource.data.hostUid == request.auth.uid
+            && request.resource.data.hostUid == resource.data.hostUid)
+          // Sahip koptuysa bir oyuncu yönetimi devralabilir
+          || (isMember(code)
+            && hostGone(code, resource.data.hostUid)
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['hostUid'])
+            && request.resource.data.hostUid == request.auth.uid)
+        );
+
+      allow delete: if signedIn() && resource.data.hostUid == request.auth.uid;
+
+      match /players/{uid} {
+        allow read: if signedIn();
+        // Yalnızca lobideyken yeni oyuncu katılabilir
+        allow create: if signedIn()
+          && uid == request.auth.uid
+          && get(roomPath(code)).data.status == 'lobby'
+          && request.resource.data.name is string
+          && request.resource.data.name.size() >= 1
+          && request.resource.data.name.size() <= 24;
+        allow update: if signedIn()
+          && uid == request.auth.uid
+          && request.resource.data.name is string
+          && request.resource.data.name.size() >= 1
+          && request.resource.data.name.size() <= 24;
+        allow delete: if signedIn()
+          && (uid == request.auth.uid || get(roomPath(code)).data.hostUid == request.auth.uid);
+      }
+
+      match /results/{resultId} {
+        allow read: if signedIn();
+        // Oyuncu yalnızca kendi sonucunu, yalnızca o anki tur için ve bir kez gönderebilir
+        allow create: if signedIn()
+          && isMember(code)
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.game == get(roomPath(code)).data.game
+          && request.resource.data.round == get(roomPath(code)).data.round
+          && resultId == string(request.resource.data.game) + '_' + string(request.resource.data.round) + '_' + request.auth.uid
+          && request.resource.data.steps is list
+          && request.resource.data.steps.size() <= 5;
+        allow update, delete: if false;
+      }
+    }
+
+    // Diğer her şey kapalı
     match /{document=**} {
       allow read, write: if false;
     }
