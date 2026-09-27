@@ -1,11 +1,12 @@
 import { useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
-import { GoogleMark, Icon, LogoMark } from '../components/Icon';
+import { Icon, LogoMark } from '../components/Icon';
 import { AccountSheet, Avatar, HowToSheet, SettingsSheet } from '../components/sheets';
+import { SignInButton } from '../components/SignInButton';
 import { useTitle } from '../components/ui';
 import { dailyKey, dailyNumber } from '../game/daily';
 import { formatTimeLimit } from '../game/format';
-import { authReady, signIn, user } from '../state/auth';
+import { user } from '../state/auth';
 import { firebaseEnabled } from '../services/config';
 import { settings } from '../state/settings';
 import { currentStreak, stats } from '../state/stats';
@@ -41,16 +42,7 @@ export default function Home() {
                 <Avatar name={u.name} photo={u.photoURL} size={36} />
               </button>
             ) : (
-              <button
-                type="button"
-                class="btn btn--sm signin"
-                onClick={() => signIn()}
-                disabled={!authReady.value}
-                aria-label="Google ile giriş yap"
-              >
-                <GoogleMark size={18} />
-                <span>Giriş</span>
-              </button>
+              <SignInButton class="btn btn--sm signin" ariaLabel="Google ile giriş yap" label={<span>Giriş</span>} />
             ))}
         </div>
       </header>

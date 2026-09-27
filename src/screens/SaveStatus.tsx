@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
-import { GoogleMark, Icon } from '../components/Icon';
-import { signIn, user } from '../state/auth';
+import { Icon } from '../components/Icon';
+import { SignInButton } from '../components/SignInButton';
+import { user } from '../state/auth';
 import { firebaseEnabled } from '../services/config';
 import type { SaveScoreInput } from '../services/scores';
 
@@ -38,10 +39,7 @@ export function SaveStatus({ payload }: { payload: Omit<SaveScoreInput, 'uid' | 
         <p>
           <b>Skorun sıralamaya girsin mi?</b> Giriş yaparsan bu oyun da kaydedilir.
         </p>
-        <button type="button" class="btn btn--sm" onClick={() => signIn()}>
-          <GoogleMark size={18} />
-          Google ile giriş
-        </button>
+        <SignInButton />
       </div>
     );
   }

@@ -1,15 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { useLocation, useRoute } from 'preact-iso';
-import { GoogleMark, Icon } from '../../components/Icon';
+import { Icon } from '../../components/Icon';
 import { Podium, RoundSummaryView, StandingsTable, toEntries, useSolutions } from '../../components/match/Match';
 import { RoundPlayer } from '../../components/round/RoundPlayer';
+import { SignInButton } from '../../components/SignInButton';
 import { Confirm, Segmented, TopBar, useTitle } from '../../components/ui';
 import { formatElapsed, formatTimeLimit } from '../../game/format';
 import { standings } from '../../game/match';
 import { generatePuzzle } from '../../game/rules';
 import type { Puzzle, RoundOutcome } from '../../game/types';
 import { shareOrCopy } from '../../lib/share';
-import { ensureSession, signIn, type AppUser } from '../../state/auth';
+import { ensureSession, type AppUser } from '../../state/auth';
 import { cleanName, NAME_MAX, nickname } from '../../state/profile';
 import { toast } from '../../state/toast';
 import { needsGoogle, onlineErrorText } from './errors';
@@ -159,10 +160,7 @@ export default function OnlineRoom() {
           <h2>Bağlanamadık</h2>
           <p class="muted">{fatal.text}</p>
           {fatal.google ? (
-            <button type="button" class="btn" onClick={() => signIn().then((ok) => ok && location.reload())}>
-              <GoogleMark size={18} />
-              Google ile giriş
-            </button>
+            <SignInButton class="btn" onSignedIn={() => location.reload()} />
           ) : (
             <button type="button" class="btn" onClick={() => location.reload()}>
               <Icon name="reset" />
