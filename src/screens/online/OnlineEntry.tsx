@@ -1,10 +1,11 @@
 import { useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
-import { GoogleMark, Icon } from '../../components/Icon';
+import { Icon } from '../../components/Icon';
+import { SignInButton } from '../../components/SignInButton';
 import { Segmented, TopBar, useTitle } from '../../components/ui';
 import { formatTimeLimit } from '../../game/format';
 import { firebaseEnabled } from '../../services/config';
-import { ensureSession, signIn, user } from '../../state/auth';
+import { ensureSession, user } from '../../state/auth';
 import { cleanName, NAME_MAX, nickname } from '../../state/profile';
 import { readJSON, writeJSON } from '../../lib/storage';
 import { needsGoogle, onlineErrorText } from './errors';
@@ -159,10 +160,7 @@ export default function OnlineEntry() {
           <div class="online-error" role="alert">
             <p>{error.text}</p>
             {error.google && (
-              <button type="button" class="btn btn--sm" onClick={() => signIn().then((ok) => ok && setError(null))}>
-                <GoogleMark size={18} />
-                Google ile giriş
-              </button>
+              <SignInButton onSignedIn={() => setError(null)} />
             )}
           </div>
         )}

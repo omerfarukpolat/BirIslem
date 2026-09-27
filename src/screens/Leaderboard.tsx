@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
-import { GoogleMark, Icon } from '../components/Icon';
+import { Icon } from '../components/Icon';
+import { SignInButton } from '../components/SignInButton';
 import { Segmented, TopBar, useTitle } from '../components/ui';
 import { dailyKey, dailyNumber } from '../game/daily';
 import { formatSeconds } from '../game/format';
@@ -14,7 +15,7 @@ import {
   type LeaderboardPeriod,
   type UserStats,
 } from '../services/scores';
-import { signIn, user } from '../state/auth';
+import { user } from '../state/auth';
 import './leaderboard.css';
 
 type Tab = 'soru' | LeaderboardPeriod;
@@ -180,10 +181,7 @@ export default function Leaderboard() {
       {!u && (
         <div class="save-note">
           <p>Sıralamada yer almak için giriş yap.</p>
-          <button type="button" class="btn btn--sm" onClick={() => signIn()}>
-            <GoogleMark size={18} />
-            Google ile giriş
-          </button>
+          <SignInButton />
         </div>
       )}
       <p class="lb-foot muted">Yalnızca yeni puanlama sistemiyle oynanan oyunlar listelenir.</p>
