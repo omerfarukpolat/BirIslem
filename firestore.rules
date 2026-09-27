@@ -1,5 +1,10 @@
 rules_version = '2';
 
+// DİKKAT: Canlı projede Firebase Console'dan eklenmiş bir "gameRooms" kuralı var.
+// Bu depodaki kod onu kullanmıyor, ama aynı projeyi kullanan başka bir şey kullanıyor
+// olabilir. Bu dosyayı yüklemeden önce o bölümü aşağıda işaretli yere ekle;
+// eklenmezse `firebase deploy` onu siler.
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -115,7 +120,9 @@ service cloud.firestore {
       }
     }
 
-    // Diğer her şey kapalı
+    // >>> Mevcut gameRooms kuralını (match /gameRooms/... { ... } bölümünün tamamı) buraya yapıştır <<<
+
+    // Diğer her şey kapalı (başka bir kuralın verdiği izni engellemez)
     match /{document=**} {
       allow read, write: if false;
     }
