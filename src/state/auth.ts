@@ -18,7 +18,33 @@ export const user = computed(() => (session.value && !session.value.anonymous ? 
 
 let started = false;
 
-const service = () => import('../services/authService');
+type AuthService = typeof import('../services/authService');
+/** Yüklendikten sonra modülün kendisi: giriş penceresi beklemeden açılabilsin diye */
+let loaded: AuthService | null = null;
+
+const service = (): Promise<AuthService> => import('../services/authService').then((m) => (loaded = m));
+
+/** Giriş hatasını oyuncuya anlaşılır bir cümleye çevirir; kod destek için sonda kalır. */
+function signInErrorText(code: string | undefined): string {
+  switch (code) {
+    case 'auth/popup-blocked':
+      return 'Tarayıcı giriş penceresini engelledi. Bu site için açılır pencerelere izin verip tekrar dene.';
+    case 'auth/unauthorized-domain':
+      return 'Bu adresten giriş yapılamıyor: alan adı Firebase\'de yetkili değil.';
+    case 'auth/network-request-failed':
+      return 'Google\'a bağlanılamadı. İnternetini ya da reklam engelleyicini kontrol et.';
+    case 'auth/internal-error':
+      // Çoğunlukla Google'ın giriş betiği (apis.google.com) engellendiğinde çıkar
+      return 'Google giriş penceresi yüklenemedi. Reklam/içerik engelleyici ya da tarayıcının gizlilik ayarı engelliyor olabilir.';
+    case 'auth/operation-not-allowed':
+      return 'Google ile giriş şu an kapalı.';
+    case 'auth/operation-not-supported-in-this-environment':
+    case 'auth/web-storage-unsupported':
+      return 'Bu tarayıcıda giriş yapılamıyor. Gizli sekme ya da kapalı çerezler engelliyor olabilir.';
+    default:
+      return 'Giriş yapılamadı. Birazdan tekrar dene.';
+  }
+}
 
 /** Firebase Auth'u ilk çizimden sonra, boşta kalınca yükler. */
 export function initAuth(eager = false) {
@@ -53,14 +79,16 @@ export async function signIn(): Promise<boolean> {
   if (!firebaseEnabled) return false;
   initAuth(true);
   try {
-    const { googleSignIn } = await service();
-    await googleSignIn();
+    // Açılır pencere tıklamayla aynı anda açılmalı: araya bir bekleme girerse
+    // Safari ve Firefox pencereyi engeller. Modül yüklüyse beklemeden çağır.
+    const m = loaded ?? (await service());
+    await m.googleSignIn();
     return true;
   } catch (err) {
     const code = (err as { code?: string }).code;
     if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
       console.warn('Giriş yapılamadı', err);
-      toast('Giriş yapılamadı. Açılır pencere engelleyicisini kontrol edip tekrar dene.', 4000);
+      toast(`${signInErrorText(code)}${code ? ` (${code.replace('auth/', '')})` : ''}`, 7000);
     }
     return false;
   }

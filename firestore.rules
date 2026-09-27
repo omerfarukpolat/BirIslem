@@ -1,5 +1,9 @@
 rules_version = '2';
 
+// Not: Eski çevrimiçi oda denemesinin "gameRooms" kuralı bilerek kaldırıldı; yeni sürüm
+// "rooms" koleksiyonunu kullanıyor. gameRooms'taki eski kayıtlar silinmez, yalnızca
+// uygulamadan erişime kapanır.
+
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -115,7 +119,7 @@ service cloud.firestore {
       }
     }
 
-    // Diğer her şey kapalı
+    // Diğer her şey kapalı (başka bir kuralın verdiği izni engellemez)
     match /{document=**} {
       allow read, write: if false;
     }
