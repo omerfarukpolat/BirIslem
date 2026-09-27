@@ -1,0 +1,230 @@
+.party-stack {
+  display: grid;
+  gap: 18px;
+}
+
+/* Karşılıklı modların ortak "genel durum" bloğu (aynı cihaz + çevrimiçi) */
+.party-standings {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding-top: 14px;
+  border-top: 2px solid var(--line);
+  text-align: left;
+}
+
+.summary {
+  display: grid;
+  gap: 14px;
+}
+
+.summary__head {
+  display: grid;
+  gap: 4px;
+}
+
+.summary__head h2 {
+  font-size: 38px;
+}
+
+.summary__target {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+}
+
+.summary__target b {
+  font-size: 28px;
+}
+
+.summary__nums {
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary__solution {
+  display: grid;
+  gap: 8px;
+}
+
+/* ---------- Tur tablosu ---------- */
+.rt {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  overflow: hidden;
+}
+
+.rt__row {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  padding: 8px 14px 8px 10px;
+}
+
+.rt__row + .rt__row {
+  border-top: 2px solid var(--line);
+}
+
+.rt__row.is-winner {
+  background: var(--amber-soft);
+}
+
+.rt__rank {
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  color: var(--ink-2);
+}
+
+.rt__row.is-winner .rt__rank {
+  color: #b8741a;
+}
+
+.rt__who {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.rt__name {
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rt__detail {
+  font-size: 14px;
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+.rt__pts {
+  font-size: 32px;
+  line-height: 1;
+}
+
+/* ---------- Genel durum ---------- */
+.standings-wrap {
+  overflow-x: auto;
+}
+
+.standings td {
+  padding: 9px 8px;
+}
+
+.standings__name {
+  max-width: 9em;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.standings__round {
+  color: var(--ink-2);
+}
+
+.standings__total {
+  font-size: 22px;
+}
+
+/* ---------- Kürsü ---------- */
+.podium {
+  display: grid;
+  gap: 6px;
+  text-align: center;
+}
+
+.podium__title {
+  font-size: 44px;
+}
+
+.podium__steps {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.podium__step {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  width: 30%;
+  max-width: 150px;
+  animation: podium 420ms cubic-bezier(0.2, 0.9, 0.3, 1.1) backwards;
+}
+
+.podium__step.is-1 {
+  animation-delay: 260ms;
+}
+
+.podium__step.is-2 {
+  animation-delay: 120ms;
+}
+
+@keyframes podium {
+  from {
+    transform: translateY(24px);
+    opacity: 0;
+  }
+}
+
+.podium__name {
+  max-width: 100%;
+  font-weight: 600;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.podium__pts {
+  font-size: 24px;
+  line-height: 1;
+  color: var(--ink-2);
+}
+
+.podium__block {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  border: 2px solid var(--ink);
+  border-bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--card);
+  font-size: 34px;
+}
+
+.podium__step.is-1 .podium__block {
+  height: 120px;
+  background: var(--amber);
+  color: #13273e;
+}
+
+.podium__step.is-2 .podium__block {
+  height: 86px;
+  background: var(--sky);
+}
+
+.podium__step.is-3 .podium__block {
+  height: 62px;
+  background: var(--paper-2);
+}
+
+.podium__step.is-1 .podium__pts {
+  color: var(--ink);
+  font-size: 30px;
+}
+
+.podium__steps + * {
+  border-top: 2px solid var(--ink);
+}

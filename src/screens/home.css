@@ -1,0 +1,274 @@
+.home {
+  display: grid;
+  gap: 22px;
+}
+
+.home__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+.home__bar-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  text-decoration: none;
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.signin {
+  gap: 6px;
+}
+
+.avatar-btn {
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+}
+
+.hero {
+  display: grid;
+  gap: 12px;
+  padding-top: 4px;
+}
+
+.hero h1 {
+  font-size: clamp(46px, 13vw, 64px);
+  line-height: 0.92;
+  letter-spacing: 0;
+}
+
+.hero em {
+  font-style: normal;
+  color: var(--tomato);
+}
+
+.hero p {
+  max-width: 34em;
+  font-size: 16px;
+}
+
+/* ---------- Mod kartları ---------- */
+.modes {
+  display: grid;
+  gap: 12px;
+}
+
+.mode {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+  color: var(--ink);
+  text-decoration: none;
+  box-shadow: 0 4px 0 var(--shadow);
+  transition:
+    transform 70ms ease-out,
+    box-shadow 70ms ease-out,
+    background-color 120ms;
+}
+
+a.mode:active {
+  transform: translateY(4px);
+  box-shadow: 0 0 0 var(--shadow);
+}
+
+@media (hover: hover) {
+  a.mode:hover {
+    background: var(--paper-2);
+  }
+}
+
+.mode__badge {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius);
+  font-size: 32px;
+  line-height: 1;
+}
+
+.mode--solo .mode__badge {
+  background: var(--tomato);
+  color: var(--tomato-ink);
+}
+
+.mode--daily .mode__badge {
+  background: var(--amber);
+  color: #13273e;
+}
+
+.mode--versus .mode__badge {
+  background: var(--sky);
+  font-size: 28px;
+}
+
+.mode__text {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.mode__title {
+  font-family: var(--font-display);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.05;
+}
+
+.mode__desc {
+  color: var(--ink-2);
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.mode__streak {
+  color: var(--tomato);
+  font-weight: 600;
+}
+
+.mode__arrow {
+  color: var(--ink-3);
+}
+
+.mode--versus {
+  grid-template-columns: auto 1fr;
+}
+
+.mode__split {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.mode__split .btn {
+  min-height: 46px;
+}
+
+/* ---------- Alt bağlantılar ---------- */
+.home__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 42px;
+  padding: 0 14px;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.chip:active {
+  background: var(--paper-2);
+}
+
+@media (hover: hover) {
+  .chip:hover {
+    border-color: var(--ink);
+  }
+}
+
+.mystats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0;
+  padding: 12px 0 0;
+  border-top: 2px solid var(--line);
+}
+
+.mystats dt {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.mystats dd {
+  margin: 0;
+  font-size: 30px;
+  line-height: 1.1;
+}
+
+@media (min-width: 720px) {
+  .home {
+    gap: 28px;
+  }
+}
+
+/* ---------- Masaüstü: solda başlık, sağda modlar ---------- */
+@media (min-width: 960px) {
+  .page.home {
+    max-width: 1120px;
+    grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'bar bar'
+      'hero modes'
+      'links modes'
+      'stats modes';
+    grid-template-rows: auto auto auto 1fr;
+    column-gap: 72px;
+    row-gap: 24px;
+    align-items: start;
+    padding-bottom: 48px;
+  }
+
+  .home__bar {
+    grid-area: bar;
+  }
+
+  .hero {
+    grid-area: hero;
+    padding-top: 48px;
+    gap: 20px;
+  }
+
+  .hero h1 {
+    font-size: 104px;
+  }
+
+  .hero p {
+    font-size: 18px;
+  }
+
+  .modes {
+    grid-area: modes;
+    padding-top: 56px;
+  }
+
+  .home__links {
+    grid-area: links;
+  }
+
+  .mystats {
+    grid-area: stats;
+    max-width: 460px;
+  }
+}

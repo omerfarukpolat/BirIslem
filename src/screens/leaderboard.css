@@ -1,0 +1,165 @@
+.lb-tabs {
+  margin: 4px 0 12px;
+}
+
+.lb-tabs .seg,
+.lb-sort .seg {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.lb-tabs .seg__opt,
+.lb-sort .seg__opt {
+  flex: none;
+}
+
+.lb-caption {
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+
+.lb-sort {
+  display: grid;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.lb-list {
+  display: grid;
+  margin: 0 0 18px;
+  padding: 0;
+  list-style: none;
+  border-top: 2px solid var(--ink);
+}
+
+.lb-row {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 62px;
+  padding: 8px 4px;
+  border-bottom: 2px solid var(--line);
+}
+
+.lb-row.is-me {
+  background: var(--amber-soft);
+}
+
+.lb-rank {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  font-size: 22px;
+  color: var(--ink-2);
+}
+
+.lb-row.is-top .lb-rank {
+  border: 2px solid var(--ink);
+  color: var(--ink);
+}
+
+.lb-row.is-top1 .lb-rank {
+  background: var(--amber);
+  color: #13273e;
+}
+
+.lb-row.is-top2 .lb-rank {
+  background: var(--card);
+}
+
+.lb-row.is-top3 .lb-rank {
+  background: var(--paper-2);
+}
+
+.lb-who {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.lb-name {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lb-you {
+  padding: 1px 7px;
+  border-radius: 6px;
+  background: var(--ink);
+  color: var(--paper);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.lb-detail {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+
+.lb-value {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.lb-bar {
+  display: block;
+  height: 14px;
+  border-radius: 4px;
+  background: var(--paper-2);
+}
+
+.lb-bar.is-thin {
+  height: 10px;
+}
+
+.lb-mine {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 2px solid var(--ink);
+  border-radius: var(--radius-lg);
+  background: var(--card);
+}
+
+.lb-mine h2 {
+  font-size: 24px;
+}
+
+.lb-mine dl {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 0;
+}
+
+.lb-mine dt {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.lb-mine dd {
+  margin: 0;
+  font-size: 28px;
+}
+
+.lb-foot {
+  margin-top: 16px;
+  font-size: 13px;
+  text-align: center;
+}
+
+.lb-list.is-loading {
+  opacity: 0.7;
+}

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="14" fill="#f3eee3"/>
+  <path d="M17.5 12H27.5V52H17.5V22L9.5 26.5V18.5Z" fill="#13273e"/>
+  <g fill="none" stroke="#13273e" stroke-width="3.4" stroke-linecap="round">
+    <path d="M40 13.5H50M45 8.5V18.5"/>
+    <path d="M40 26H50"/>
+    <path d="M41.3 34.2L48.7 41.6M48.7 34.2L41.3 41.6"/>
+    <path d="M40 50.5H50"/>
+  </g>
+  <circle cx="45" cy="46.2" r="1.9" fill="#13273e"/>
+  <circle cx="45" cy="54.8" r="1.9" fill="#13273e"/>
+</svg>

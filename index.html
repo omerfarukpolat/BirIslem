@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#f3eee3" />
+    <script>
+      // Tema tercihini ilk çizimden önce uygula (yanıp sönmesin)
+      try {
+        var t = JSON.parse(localStorage.getItem('theme') || '"system"');
+        if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+        var dark = t === 'dark' || (t === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
+        if (dark) document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0e1826');
+      } catch (e) {}
+    </script>
+
+    <title>Bir İşlem - Matematik Zeka Oyunu | Ücretsiz Online Oyun</title>
+    <meta name="title" content="Bir İşlem - Matematik Zeka Oyunu | Ücretsiz Online Oyun" />
+    <meta
+      name="description"
+      content="Bir İşlem matematik zeka oyunu: 5 rakam ve 1 iki basamaklı sayı ile üç basamaklı hedefe ulaş. Tek başına oyna, günün sorusunu çöz ya da arkadaşlarınla aynı soruda yarış. Ücretsiz, kayıt gerektirmez."
+    />
+    <meta
+      name="keywords"
+      content="bir işlem, matematik oyunu, zeka oyunu, sayı oyunu, bir kelime bir işlem, online matematik oyunu, ücretsiz matematik oyunu, sayı bulmaca, matematik bulmaca, günün sorusu"
+    />
+    <meta name="author" content="Bir İşlem" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://www.birislem.app/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.birislem.app/" />
+    <meta property="og:title" content="Bir İşlem - Matematik Zeka Oyunu" />
+    <meta
+      property="og:description"
+      content="Altı sayı, dört işlem, tek hedef. Tek başına oyna, günün sorusunu çöz ya da arkadaşlarınla aynı soruda yarış."
+    />
+    <meta property="og:image" content="https://www.birislem.app/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Bir İşlem" />
+    <meta property="og:locale" content="tr_TR" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Bir İşlem - Matematik Zeka Oyunu" />
+    <meta name="twitter:description" content="Altı sayı, dört işlem, tek hedef. Arkadaşlarınla aynı soruda yarış." />
+    <meta name="twitter:image" content="https://www.birislem.app/og-image.png" />
+
+    <meta name="application-name" content="Bir İşlem" />
+    <meta name="apple-mobile-web-app-title" content="Bir İşlem" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <link rel="icon" href="/favicon.ico" sizes="32x32" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "Bir İşlem",
+        "description": "Matematik zeka oyunu: 5 rakam ve 1 iki basamaklı sayı ile üç basamaklı hedefe ulaş. Tek başına, günün sorusu ve arkadaşlarla karşılıklı modlar.",
+        "url": "https://www.birislem.app",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Web Browser",
+        "inLanguage": "tr",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "TRY" }
+      }
+    </script>
+  </head>
+  <body>
+    <noscript>Bu oyunu oynamak için JavaScript'i etkinleştirmen gerekiyor.</noscript>
+    <div id="app"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
