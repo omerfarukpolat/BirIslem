@@ -25,7 +25,9 @@ test('daily puzzle allows a single attempt and survives a reload', async ({ page
   // Yenileme ek hak vermez: süre kaldığı yerden devam eder, en yakın sonuç korunur
   await waitForPlay(page);
   await expect(page.locator('.challenge-note')).toContainText('daha önce başlamıştın');
-  await expect(page.locator('.status__value')).not.toContainText('henüz yok');
+  await expect(page.locator('.status__best .status__value')).not.toContainText('henüz yok');
+  // Yenilemeden sonra tahta boş; en yakın sonuca giden yol yine görünür
+  await expect(page.locator('.bestpath')).toBeVisible();
   await finish(page);
   await expect(page.locator('.scorecard')).toBeVisible();
   // Puan hesaplanmadan hemen yenilense bile sonuç korunur, yeni deneme açılmaz
@@ -59,6 +61,8 @@ test('same-device versus: two players, two rounds, final standings', async ({ pa
     }
     await expect(page.locator('.summary')).toBeVisible();
     await expect(page.locator('.rt__row')).toHaveCount(2);
+    // Her oyuncunun sonuca nasıl ulaştığı görünür
+    await expect(page.locator('.rt__path')).toHaveCount(2);
     await page.locator('.party-stack > .btn--primary').click();
   }
   await expect(page.locator('.podium')).toBeVisible();

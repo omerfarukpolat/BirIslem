@@ -1,7 +1,7 @@
 import { memo } from 'preact/compat';
 import { useEffect, useMemo } from 'preact/hooks';
 import { formatClock } from '../../game/format';
-import { opsLeft } from '../../game/round';
+import { bestOnBoard, opsLeft } from '../../game/round';
 import { OP_SYMBOL, OPS } from '../../game/rules';
 import type { Op } from '../../game/types';
 import { Icon } from '../Icon';
@@ -140,21 +140,13 @@ function TimerBar({ ctl }: { ctl: RoundController }) {
 
 function Status({ ctl }: { ctl: RoundController }) {
   const s = ctl.round.value;
-  const best = s.best;
+  const last = s.steps[s.steps.length - 1];
   const left = opsLeft(s);
   return (
-    <section class="status">
-      <div class="status__best">
-        <span class="eyebrow">En yakın</span>
-        {best ? (
-          <span class={`status__value num${best.diff === 0 ? ' is-exact' : ''}`}>
-            {best.value}
-            <small>{best.diff === 0 ? 'tam' : `${best.diff} fark`}</small>
-          </span>
-        ) : (
-          <span class="status__value is-empty">henüz yok</span>
-        )}
-      </div>
+    <section class={`status${s.opLimit > 0 ? ' has-ops' : ''}`}>
+      {/* Tahtadaki son işlemin sonucu: geri alınca bir öncekine döner */}
+      <Stat kind="last" label="Son işlem" value={last ? last.result.value : null} target={s.puzzle.target} empty="–" />
+      <Stat kind="best" label="En yakın" value={s.best ? s.best.value : null} target={s.puzzle.target} empty="henüz yok" />
       {s.opLimit > 0 && (
         <div class={`status__ops${left === 0 ? ' is-out' : ''}`}>
           <span class="eyebrow">İşlem hakkı</span>
@@ -165,6 +157,39 @@ function Status({ ctl }: { ctl: RoundController }) {
       )}
       <Hint ctl={ctl} />
     </section>
+  );
+}
+
+function Stat({
+  kind,
+  label,
+  value,
+  target,
+  empty,
+}: {
+  kind: 'last' | 'best';
+  label: string;
+  value: number | null;
+  target: number;
+  empty: string;
+}) {
+  const diff = value === null ? null : Math.abs(target - value);
+  return (
+    <div
+      class={`status__stat status__${kind}`}
+      aria-live={kind === 'last' ? 'polite' : undefined}
+      aria-atomic={kind === 'last' ? 'true' : undefined}
+    >
+      <span class="eyebrow">{label}</span>
+      {value === null ? (
+        <span class="status__value is-empty">{empty}</span>
+      ) : (
+        <span class={`status__value num${diff === 0 ? ' is-exact' : ''}`}>
+          {value}
+          <small>{diff === 0 ? 'tam' : `${diff} fark`}</small>
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -314,15 +339,33 @@ function Actions({ ctl }: { ctl: RoundController }) {
 }
 
 function Steps({ ctl }: { ctl: RoundController }) {
-  const steps = ctl.round.value.steps;
-  if (steps.length === 0) return null;
+  const s = ctl.round.value;
+  // Geri alınan ya da baştan alınan en yakın sonucun nasıl bulunduğu kaybolmasın
+  const best = s.best && !bestOnBoard(s) ? s.best : null;
+  if (s.steps.length === 0 && !best) return null;
   return (
-    <ol class="steps" aria-label="İşlemlerin">
-      {steps.map((s, i) => (
-        <li key={i} class="num">
-          {s.a.value} {OP_SYMBOL[s.op]} {s.b.value} = <b>{s.result.value}</b>
-        </li>
-      ))}
-    </ol>
+    <section class="trail">
+      {s.steps.length > 0 && (
+        <ol class="steps" aria-label="İşlemlerin">
+          {s.steps.map((st, i) => (
+            <li key={i} class="num">
+              {st.a.value} {OP_SYMBOL[st.op]} {st.b.value} = <b>{st.result.value}</b>
+            </li>
+          ))}
+        </ol>
+      )}
+      {best && (
+        <div class="bestpath">
+          <span class="eyebrow">En yakın sonucun yolu</span>
+          <ol class="steps steps--best" aria-label="En yakın sonucun işlemleri">
+            {best.steps.map((st, i) => (
+              <li key={i} class="num">
+                {st.a} {OP_SYMBOL[st.op]} {st.b} = <b>{st.result}</b>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+    </section>
   );
 }
