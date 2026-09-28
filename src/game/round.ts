@@ -121,6 +121,14 @@ export function traceSteps(steps: readonly Step[], tileId: number): SimpleStep[]
   return out.map(toSimple);
 }
 
+/** En yakın sonucun bütün adımları tahtada duruyor mu (geri alınıp silinmediyse)? */
+export function bestOnBoard(state: RoundState): boolean {
+  const best = state.best;
+  if (!best) return false;
+  const shown = state.steps.map(toSimple);
+  return best.steps.every((b) => shown.some((s) => s.a === b.a && s.op === b.op && s.b === b.b && s.result === b.result));
+}
+
 export function toSimple(s: Step): SimpleStep {
   return { a: s.a.value, op: s.op, b: s.b.value, result: s.result.value };
 }

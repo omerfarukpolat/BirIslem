@@ -43,6 +43,9 @@ test('two players finish a room match and see the same standings', async ({ brow
     await finish(guest);
     if (round < 3) {
       await expect(guest.locator('.summary')).toBeVisible();
+      // Rakibin sonuca nasıl ulaştığı da görünür (sonuçlar Firestore'dan gelir)
+      await expect(guest.locator('.rt__path')).toHaveCount(2);
+      await expect(guest.locator('.rt__path', { hasText: '×' })).toHaveCount(1);
       await host.getByRole('button', { name: /Sonraki tur/ }).click();
     }
   }

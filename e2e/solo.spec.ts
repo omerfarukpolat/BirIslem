@@ -39,11 +39,22 @@ test('blocks invalid operations and keeps the closest result after undo', async 
   await tile(page, 5); // 45
   await op(page, '×');
   await tile(page, 4); // 9 → 405 (fark 51)
-  await expect(page.locator('.status__value')).toContainText('405');
+  await expect(page.locator('.status__last')).toContainText('405');
+  await expect(page.locator('.status__last')).toContainText('51 fark');
+  await expect(page.locator('.status__best .status__value')).toContainText('405');
+  await expect(page.locator('.bestpath')).toHaveCount(0);
   await page.getByRole('button', { name: 'Geri al' }).click();
   await expect(page.locator('.tiles > *').nth(5)).toHaveText(/45/);
-  // En yakın sonuç geri almada kaybolmaz
-  await expect(page.locator('.status__value')).toContainText('405');
+  await expect(page.locator('.status__last')).toContainText('–');
+  // En yakın sonuç ve ona giden yol geri almada kaybolmaz
+  await expect(page.locator('.status__best .status__value')).toContainText('405');
+  await expect(page.locator('.bestpath')).toContainText('45 × 9 = 405');
+
+  await tile(page, 1); // 5
+  await op(page, '+');
+  await tile(page, 0); // 2 → 7 (fark 347)
+  await expect(page.locator('.status__last')).toContainText('347 fark');
+  await expect(page.locator('.status__best .status__value')).toContainText('405');
 
   await finish(page);
   await expect(page.locator('.scorecard__verdict')).toContainText('51 fark');

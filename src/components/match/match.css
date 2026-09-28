@@ -106,6 +106,22 @@
   font-variant-numeric: tabular-nums;
 }
 
+.rt__path {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 3px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--ink-2);
+}
+
+.rt__path > span {
+  padding: 0 6px;
+  border-radius: 6px;
+  background: var(--paper-2);
+}
+
 .rt__pts {
   font-size: 32px;
   line-height: 1;

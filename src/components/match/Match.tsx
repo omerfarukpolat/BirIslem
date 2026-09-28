@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'preact/hooks';
 import { formatSeconds } from '../../game/format';
 import { rankRound, type RankedEntry, type RoundEntry, type Standing } from '../../game/match';
+import { OP_SYMBOL } from '../../game/rules';
 import { scoreRound } from '../../game/scoring';
 import type { Solution } from '../../game/solver';
 import { peekSolution, solvePuzzle } from '../../game/solverClient';
@@ -84,6 +85,15 @@ export function RoundTable({
                     ? 'sonuç yok'
                     : `${entry.value} · ${entry.diff === 0 ? 'tam' : `${entry.diff} fark`} · ${formatSeconds(entry.reachedAtMs)}`}
               </span>
+              {!waiting && entry.steps.length > 0 && (
+                <span class="rt__path num" aria-label="İşlemleri">
+                  {entry.steps.map((st, i) => (
+                    <span key={i}>
+                      {st.a} {OP_SYMBOL[st.op]} {st.b} = {st.result}
+                    </span>
+                  ))}
+                </span>
+              )}
             </span>
             <span class="rt__pts num">{waiting ? '–' : entry.score.total}</span>
           </li>

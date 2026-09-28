@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canContinue, check, combine, createRound, opsLeft, outcomeOf, reset, traceSteps, undo } from './round';
+import { bestOnBoard, canContinue, check, combine, createRound, opsLeft, outcomeOf, reset, traceSteps, undo } from './round';
 import type { Puzzle } from './types';
 
 const puzzle: Puzzle = { numbers: [2, 5, 6, 8, 9, 45], target: 354 };
@@ -77,6 +77,22 @@ describe('round engine', () => {
       { a: 360, op: '-', b: 6, result: 354 },
     ]);
     expect(s.best?.steps).toHaveLength(2);
+  });
+
+  it('tells whether the closest result is still on the board', () => {
+    let s = createRound(puzzle);
+    expect(bestOnBoard(s)).toBe(false);
+    s = combine(s, 5, '*', 3, 0); // 45 × 8 = 360 (en yakın)
+    s = combine(s, 0, '+', 1, 0); // 2 + 5 = 7 (alakasız)
+    expect(bestOnBoard(s)).toBe(true);
+    s = undo(s);
+    expect(bestOnBoard(s)).toBe(true);
+    s = undo(s);
+    expect(bestOnBoard(s)).toBe(false);
+    expect(s.best?.value).toBe(360);
+    s = combine(s, 5, '*', 3, 0); // aynı işlem yeniden yapılınca yine tahtada
+    expect(bestOnBoard(s)).toBe(true);
+    expect(bestOnBoard(reset(s))).toBe(false);
   });
 
   it('builds an outcome from the best result', () => {
