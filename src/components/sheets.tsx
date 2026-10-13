@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'preact/hooks';
 import { formatTimeLimit } from '../game/format';
 import { BANDS, MAX_SCORE } from '../game/scoring';
-import { signOut, user } from '../state/auth';
+import { deleteAccount, prepareReauth, signOut, user } from '../state/auth';
 import { OP_LIMIT_OPTIONS, TIME_OPTIONS, settings, soundOn, theme, type GameSettings, type Theme } from '../state/settings';
 import { Icon } from './Icon';
 import { Segmented, Sheet } from './ui';
@@ -164,6 +165,14 @@ export function HowToSheet({ open, onClose }: { open: boolean; onClose: () => vo
 
 export function AccountSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   const u = user.value;
+  const [confirming, setConfirming] = useState(false);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (open && u) prepareReauth();
+    if (!open) setConfirming(false);
+  }, [open, u]);
+
   return (
     <Sheet open={open} onClose={onClose} title="Hesap">
       {u ? (
@@ -184,6 +193,41 @@ export function AccountSheet({ open, onClose }: { open: boolean; onClose: () => 
             <Icon name="logout" />
             Çıkış yap
           </button>
+          {confirming ? (
+            <div class="account__danger" role="alert">
+              <p>
+                Hesabın ve sıralamadaki bütün skorların kalıcı olarak silinir. Gerekirse Google seni bir kez daha
+                doğrular.
+              </p>
+              <div class="confirm-actions">
+                <button type="button" class="btn" onClick={() => setConfirming(false)} disabled={busy}>
+                  Vazgeç
+                </button>
+                <button
+                  type="button"
+                  class="btn btn--primary"
+                  disabled={busy}
+                  onClick={async () => {
+                    setBusy(true);
+                    const ok = await deleteAccount();
+                    setBusy(false);
+                    if (ok) onClose();
+                  }}
+                >
+                  {busy ? 'Siliniyor…' : 'Hesabı sil'}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <p class="account__links">
+              <button type="button" class="link-btn" onClick={() => setConfirming(true)}>
+                Hesabımı sil
+              </button>
+              <a href="/gizlilik" onClick={onClose}>
+                Gizlilik
+              </a>
+            </p>
+          )}
         </div>
       ) : (
         <p class="muted">Giriş yapmadın.</p>

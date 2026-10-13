@@ -1,4 +1,5 @@
 import { computed, signal } from '@preact/signals';
+import { appShell, IN_APP_UA } from '../lib/platform';
 import { firebaseEnabled } from '../services/config';
 import { toast } from './toast';
 
@@ -14,6 +15,12 @@ export interface AppUser {
 export const session = signal<AppUser | null>(null);
 /** Giriş düğmesine basılabilir mi: Google penceresi tıklamayla hemen açılabilecek durumda */
 export const signInReady = signal(!firebaseEnabled);
+/**
+ * iOS uygulamasında Google girişi yok: Google gömülü tarayıcıda (WKWebView) girişi
+ * engelliyor, Apple da Google girişi sunan uygulamadan "Apple ile giriş" istiyor.
+ * Oyun, sıralama ve çevrimiçi odalar girişsiz çalışır.
+ */
+export const googleSignInAvailable = firebaseEnabled && appShell !== 'ios';
 /** Google ile giriş yapmış gerçek kullanıcı: skorlar yalnızca bunun için kaydedilir */
 export const user = computed(() => (session.value && !session.value.anonymous ? session.value : null));
 
@@ -30,9 +37,6 @@ const whenIdle = (fn: () => void) => {
   else setTimeout(fn, 600);
 };
 
-/** Instagram, Facebook, TikTok… içindeki tarayıcılar: Google buralarda girişe izin vermiyor */
-const IN_APP_UA = /FBAN|FBAV|FB_IAB|Instagram|LinkedInApp|Snapchat|BytedanceWebview|musical_ly|TikTok|\bLine\/|; wv\)/i;
-
 /** Giriş hatasını oyuncuya anlaşılır bir cümleye çevirir; kod destek için sonda kalır. */
 function signInErrorText(code: string | undefined): string {
   switch (code) {
@@ -47,6 +51,8 @@ function signInErrorText(code: string | undefined): string {
       return 'Google giriş penceresi yüklenemedi. Reklam/içerik engelleyici ya da tarayıcının gizlilik ayarı engelliyor olabilir.';
     case 'auth/operation-not-allowed':
       return 'Google ile giriş şu an kapalı.';
+    case 'auth/requires-recent-login':
+      return 'Güvenlik için yeniden giriş gerekiyor. Çıkış yapıp tekrar giriş yaptıktan sonra hemen yeniden dene.';
     case 'auth/operation-not-supported-in-this-environment':
     case 'auth/web-storage-unsupported':
       return 'Bu tarayıcıda giriş yapılamıyor. Gizli sekme ya da kapalı çerezler engelliyor olabilir.';
@@ -61,6 +67,11 @@ export function initAuth(eager = false) {
   started = true;
   const run = () =>
     service()
+      .then((m) => {
+        // Android uygulaması yönlendirmeli giriş kullanır: dönüşteki hatayı göster
+        if (appShell === 'android') m.finishRedirect().catch(reportSignInError);
+        return m;
+      })
       .then(({ watchAuth }) =>
         watchAuth((u) => {
           session.value = u
@@ -87,7 +98,7 @@ let prep: 'idle' | 'busy' | 'done' = 'idle';
  * Hazırlık uzarsa düğme yine açılır, eksik kalan kısım tıklamada tamamlanır.
  */
 export function prepareSignIn(): void {
-  if (!firebaseEnabled || prep !== 'idle') return;
+  if (!googleSignInAvailable || prep !== 'idle') return;
   prep = 'busy';
   signInReady.value = false;
   whenIdle(() => {
@@ -109,25 +120,62 @@ export function prepareSignIn(): void {
   });
 }
 
+function reportSignInError(err: unknown): void {
+  const code = (err as { code?: string }).code;
+  if (code === 'auth/cancelled-popup-request') return;
+  const suffix = code ? ` (${code.replace('auth/', '')})` : '';
+  if (IN_APP_UA.test(navigator.userAgent)) {
+    // Pencere ya hiç açılmıyor ya da Google'ın "erişim engellendi" sayfası çıkıyor
+    toast(`Uygulama içindeki tarayıcıda Google girişi çalışmıyor. Menüden sayfayı Safari ya da Chrome'da açıp tekrar dene.${suffix}`, 9000);
+  } else if (code !== 'auth/popup-closed-by-user') {
+    console.warn('Giriş yapılamadı', err);
+    toast(`${signInErrorText(code)}${suffix}`, 7000);
+  }
+}
+
 export async function signIn(): Promise<boolean> {
-  if (!firebaseEnabled) return false;
+  if (!googleSignInAvailable) return false;
   initAuth(true);
   try {
     // Açılır pencere tıklamayla aynı anda açılmalı: araya bir bekleme girerse
     // Safari ve Firefox pencereyi engeller. Modül yüklüyse beklemeden çağır.
     const m = loaded ?? (await service());
-    await m.googleSignIn();
+    // Android uygulamasında (TWA) açılır pencere ayrı bir Chrome sekmesine düşebiliyor;
+    // giriş sayfası sitenin kendi alan adındaysa sayfa içi yönlendirme daha sağlam.
+    await m.googleSignIn(appShell === 'android' && m.firstPartyAuthDomain());
+    return true;
+  } catch (err) {
+    reportSignInError(err);
+    return false;
+  }
+}
+
+/** Hesap ekranı açılınca: silme onayında kimlik doğrulama penceresi hemen açılabilsin */
+export function prepareReauth(): void {
+  loaded?.preparePopup(true).catch(() => {});
+}
+
+/**
+ * Hesabı ve sıralamadaki bütün skorları siler (mağazaların istediği hesap silme).
+ * Tıklamayla çağrılmalı: gerekirse önce Google kimlik doğrulama penceresi açılır.
+ */
+export async function deleteAccount(): Promise<boolean> {
+  const m = loaded;
+  const u = session.peek();
+  if (!m || !u || u.anonymous) return false;
+  try {
+    if (!m.recentlySignedIn()) await m.reauthenticate();
+    const { deleteUserScores } = await import('../services/scores');
+    await deleteUserScores(u.uid);
+    await m.deleteCurrentUser();
+    toast('Hesabın ve skorların silindi.', 5000);
     return true;
   } catch (err) {
     const code = (err as { code?: string }).code;
-    if (code === 'auth/cancelled-popup-request') return false;
-    const suffix = code ? ` (${code.replace('auth/', '')})` : '';
-    if (IN_APP_UA.test(navigator.userAgent)) {
-      // Pencere ya hiç açılmıyor ya da Google'ın "erişim engellendi" sayfası çıkıyor
-      toast(`Uygulama içindeki tarayıcıda Google girişi çalışmıyor. Menüden sayfayı Safari ya da Chrome'da açıp tekrar dene.${suffix}`, 9000);
-    } else if (code !== 'auth/popup-closed-by-user') {
-      console.warn('Giriş yapılamadı', err);
-      toast(`${signInErrorText(code)}${suffix}`, 7000);
+    if (code !== 'auth/popup-closed-by-user' && code !== 'auth/cancelled-popup-request') {
+      console.warn('Hesap silinemedi', err);
+      const text = code?.startsWith('auth/') ? signInErrorText(code) : 'Hesap silinemedi. Bağlantını kontrol edip tekrar dene.';
+      toast(`${text}${code ? ` (${code.replace('auth/', '')})` : ''}`, 8000);
     }
     return false;
   }

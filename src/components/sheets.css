@@ -84,6 +84,38 @@ kbd {
   margin-top: 8px;
 }
 
+.account__links,
+.account__danger {
+  grid-column: 1 / -1;
+}
+
+.account__links {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  color: var(--ink-2);
+  font-size: 15px;
+}
+
+.account__links a {
+  color: inherit;
+  font-weight: 600;
+  text-underline-offset: 3px;
+}
+
+.account__danger {
+  display: grid;
+  gap: 12px;
+  margin-top: 6px;
+  padding: 14px;
+  border: 2px solid var(--tomato);
+  border-radius: var(--radius);
+}
+
+.account .account__danger .btn {
+  margin-top: 0;
+}
+
 .account__name {
   font-family: var(--font-display);
   font-size: 24px;

@@ -20,14 +20,16 @@ service cloud.firestore {
       // Sıralama herkese açık
       allow read: if true;
       // Yalnızca Google ile giriş yapmış kullanıcı, kendi adına ve makul bir skorla yazabilir.
-      // Güncelleme/silme yok: günün sorusu belgesi (daily_<gün>_<uid>) tek sefer oluşturulabilir.
+      // Güncelleme yok: günün sorusu belgesi (daily_<gün>_<uid>) tek sefer oluşturulabilir.
       allow create: if realUser()
         && request.resource.data.userId == request.auth.uid
         && request.resource.data.score is number
         && request.resource.data.score >= 0
         && request.resource.data.score <= 300
         && (!scoreId.matches('daily_.*') || scoreId == 'daily_' + request.resource.data.puzzleId + '_' + request.auth.uid);
-      allow update, delete: if false;
+      allow update: if false;
+      // Hesap silinirken kullanıcı kendi skorlarını silebilir
+      allow delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
 
     // ---------- Çevrimiçi odalar ----------

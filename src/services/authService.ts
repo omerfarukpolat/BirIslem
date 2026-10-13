@@ -1,11 +1,15 @@
 import {
   GoogleAuthProvider,
   connectAuthEmulator,
-  signInWithCredential,
+  deleteUser,
   getAuth,
+  getRedirectResult,
   onAuthStateChanged,
+  reauthenticateWithPopup,
   signInAnonymously,
+  signInWithCredential,
   signInWithPopup,
+  signInWithRedirect,
   signOut,
   updateProfile,
   type Auth,
@@ -50,20 +54,58 @@ type ResolverHost = { _popupRedirectResolver?: { _initialize?: (auth: Auth) => P
  * tanıdığı kısa süreden sonra açılıyor ve engelleniyor. İç API değişirse sessizce
  * hiçbir şey yapmaz. Google ile girmiş kullanıcı için yüklemez ve false döner.
  */
-export async function preparePopup(): Promise<boolean> {
+export async function preparePopup(forSignedIn = false): Promise<boolean> {
   const a = authInstance();
   await a.authStateReady();
-  if (a.currentUser && !a.currentUser.isAnonymous) return false;
+  if (!forSignedIn && a.currentUser && !a.currentUser.isAnonymous) return false;
   const resolver = (a as unknown as ResolverHost)._popupRedirectResolver;
   if (resolver?._initialize) await resolver._initialize(a);
   return true;
 }
 
-export async function googleSignIn(): Promise<User> {
+function googleProvider(): GoogleAuthProvider {
   const provider = new GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
-  const res = await signInWithPopup(authInstance(), provider);
+  return provider;
+}
+
+/**
+ * Giriş sayfası sitenin kendi alan adında mı (Vercel'de /__/auth yönlendirmesi)?
+ * Öyleyse yönlendirmeli giriş tarayıcının çerez kısıtlarına takılmaz.
+ */
+export function firstPartyAuthDomain(): boolean {
+  return authInstance().config.authDomain === location.host;
+}
+
+/** redirect: sayfa Google'a gider ve geri döner (Android uygulaması); yoksa açılır pencere */
+export async function googleSignIn(redirect = false): Promise<User | null> {
+  if (redirect) {
+    await signInWithRedirect(authInstance(), googleProvider());
+    return null;
+  }
+  const res = await signInWithPopup(authInstance(), googleProvider());
   return res.user;
+}
+
+/** Yönlendirmeli girişten dönünce hatayı yakalamak için */
+export async function finishRedirect(): Promise<void> {
+  await getRedirectResult(authInstance());
+}
+
+/** Firebase hesap silmek için girişin birkaç dakika içinde yapılmış olmasını istiyor */
+export function recentlySignedIn(): boolean {
+  const at = authInstance().currentUser?.metadata.lastSignInTime;
+  return !!at && Date.now() - Date.parse(at) < 4 * 60_000;
+}
+
+export async function reauthenticate(): Promise<void> {
+  const u = authInstance().currentUser;
+  if (u) await reauthenticateWithPopup(u, googleProvider());
+}
+
+export async function deleteCurrentUser(): Promise<void> {
+  const u = authInstance().currentUser;
+  if (u) await deleteUser(u);
 }
 
 export async function anonymousSignIn(): Promise<User> {

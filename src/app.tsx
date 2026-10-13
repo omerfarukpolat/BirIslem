@@ -10,6 +10,7 @@ const Leaderboard = lazy(() => import('./screens/Leaderboard'));
 const Party = lazy(() => import('./screens/party/Party'));
 const OnlineEntry = lazy(() => import('./screens/online/OnlineEntry'));
 const OnlineRoom = lazy(() => import('./screens/online/OnlineRoom'));
+const Privacy = lazy(() => import('./screens/Privacy'));
 
 function NotFound() {
   const { route } = useLocation();
@@ -45,6 +46,7 @@ export function App() {
           <Route path="/karsilikli" component={Party} />
           <Route path="/oda" component={OnlineEntry} />
           <Route path="/oda/:code" component={OnlineRoom} />
+          <Route path="/gizlilik" component={Privacy} />
           <Route default component={NotFound} />
         </Router>
       </ErrorBoundary>
