@@ -47,6 +47,7 @@ npm run dev            # http://localhost:3000
 | `npm test` | Birim testleri (Vitest): oyun motoru, puanlama, çözücü, oda mantığı |
 | `npm run e2e` | Uçtan uca testler (Playwright) |
 | `npm run emulators` | Firebase Auth + Firestore emülatörleri (firebase-tools gerekir) |
+| `npm run store:assets` | Mağaza ekran görüntüleri, öne çıkan görsel ve simgeler (`store/`) |
 
 Firebase ayarları olmadan da oyun (tek başına, günün sorusu, aynı cihazda) tamamen çalışır; giriş, sıralama ve çevrimiçi odalar gizlenir.
 
@@ -81,6 +82,10 @@ Vercel ayarları `vercel.json` içinde (Vite, çıktı klasörü `build/`, tek s
    - Skorlar yalnızca Google ile giriş yapmış kullanıcı tarafından, kendi adına ve bir kez yazılabilir; günün sorusu kullanıcı başına günde bir kayıttır.
    - Odalar kodla okunur, listelenemez; turu yalnızca oda sahibi ilerletir, oda sahibi koparsa bir oyuncu yönetimi devralabilir; herkes yalnızca kendi sonucunu, o anki tur için bir kez gönderebilir.
 3. **(İsteğe bağlı) Eski odaları temizleme:** Firestore → TTL ilkeleri'nde `rooms`, `players` ve `results` koleksiyon grupları için `expiresAt` alanını seç. Odalar 24 saat sonra silinir.
+
+### Mobil uygulamalar
+
+Google Play (Trusted Web Activity) ve App Store (WKWebView kabuğu) için adım adım rehber: [docs/magazalar.md](docs/magazalar.md). Site çevrimdışı da açılır (`pwa/sw.js`); gizlilik politikası `/gizlilik` adresinde, hesap silme Hesap ekranında.
 
 ### Sıralama
 
