@@ -1,4 +1,4 @@
-import { Timestamp, addDoc, collection, doc, getDocs, query, setDoc, where } from 'firebase/firestore';
+import { Timestamp, addDoc, collection, doc, getDocs, query, setDoc, where, writeBatch } from 'firebase/firestore';
 import type { SimpleStep } from '../game/types';
 import { firestore } from './db';
 
@@ -157,6 +157,17 @@ export interface UserStats {
   best: number;
   average: number;
   exact: number;
+}
+
+/** Hesap silinirken kullanıcının bütün skor kayıtları (eski sürümdekiler dahil) silinir. */
+export async function deleteUserScores(uid: string): Promise<void> {
+  const db = firestore();
+  const snap = await getDocs(query(collection(db, 'scores'), where('userId', '==', uid)));
+  for (let i = 0; i < snap.docs.length; i += 400) {
+    const batch = writeBatch(db);
+    for (const d of snap.docs.slice(i, i + 400)) batch.delete(d.ref);
+    await batch.commit();
+  }
 }
 
 export async function fetchUserStats(uid: string): Promise<UserStats> {

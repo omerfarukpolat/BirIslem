@@ -15,7 +15,7 @@ import {
   type LeaderboardPeriod,
   type UserStats,
 } from '../services/scores';
-import { user } from '../state/auth';
+import { googleSignInAvailable, user } from '../state/auth';
 import './leaderboard.css';
 
 type Tab = 'soru' | LeaderboardPeriod;
@@ -178,7 +178,7 @@ export default function Leaderboard() {
         </section>
       )}
 
-      {!u && (
+      {!u && googleSignInAvailable && (
         <div class="save-note">
           <p>Sıralamada yer almak için giriş yap.</p>
           <SignInButton />

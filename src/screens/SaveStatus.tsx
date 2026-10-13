@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { Icon } from '../components/Icon';
 import { SignInButton } from '../components/SignInButton';
-import { user } from '../state/auth';
+import { googleSignInAvailable, user } from '../state/auth';
 import { firebaseEnabled } from '../services/config';
 import type { SaveScoreInput } from '../services/scores';
 
@@ -34,6 +34,7 @@ export function SaveStatus({ payload }: { payload: Omit<SaveScoreInput, 'uid' | 
   if (!firebaseEnabled || !payload) return null;
 
   if (!u) {
+    if (!googleSignInAvailable) return null;
     return (
       <div class="save-note">
         <p>

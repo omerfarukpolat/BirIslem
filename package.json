@@ -22,7 +22,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "e2e": "playwright test",
-    "emulators": "firebase emulators:start --only auth,firestore --project demo-birislem"
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-birislem",
+    "store:assets": "node scripts/store-assets.mjs"
   },
   "dependencies": {
     "@fontsource/barlow": "^5.3.0",

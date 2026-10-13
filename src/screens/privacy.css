@@ -1,0 +1,29 @@
+.privacy__body {
+  display: grid;
+  gap: 10px;
+  padding-bottom: 24px;
+  line-height: 1.55;
+}
+
+.privacy__body h1 {
+  font-size: 34px;
+  line-height: 1.1;
+}
+
+.privacy__body h2 {
+  margin-top: 14px;
+  font-size: 22px;
+  scroll-margin-top: 16px;
+}
+
+.privacy__body ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 20px;
+}
+
+.privacy__body a {
+  font-weight: 600;
+  text-underline-offset: 3px;
+}

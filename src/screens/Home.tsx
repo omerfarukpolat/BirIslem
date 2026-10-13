@@ -146,6 +146,10 @@ export default function Home() {
         </dl>
       )}
 
+      <footer class="home__foot">
+        <a href="/gizlilik">Gizlilik</a>
+      </footer>
+
       <SettingsSheet open={sheet === 'settings'} onClose={close} />
       <HowToSheet open={sheet === 'howto'} onClose={close} />
       <AccountSheet open={sheet === 'account'} onClose={close} />

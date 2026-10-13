@@ -272,3 +272,16 @@ a.mode:active {
     max-width: 460px;
   }
 }
+
+.home__foot {
+  display: flex;
+  justify-content: center;
+  padding-top: 8px;
+  font-size: 14px;
+}
+
+.home__foot a {
+  color: var(--ink-3);
+  font-weight: 600;
+  text-underline-offset: 3px;
+}

@@ -1,6 +1,6 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect } from 'preact/hooks';
-import { prepareSignIn, signIn, signInReady } from '../state/auth';
+import { googleSignInAvailable, prepareSignIn, signIn, signInReady } from '../state/auth';
 import { GoogleMark } from './Icon';
 
 /**
@@ -20,6 +20,7 @@ export function SignInButton({
 }) {
   useEffect(prepareSignIn, []);
   const ready = signInReady.value;
+  if (!googleSignInAvailable) return null;
   return (
     <button
       type="button"
