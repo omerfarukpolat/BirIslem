@@ -200,10 +200,9 @@ export default function OnlineRoom() {
   const hostName = players.find((p) => p.uid === hostUid)?.name ?? 'Oda sahibi';
   const ids = players.map((p) => p.uid);
   const names = Object.fromEntries(players.map((p) => [p.uid, p.name]));
-  const limitMs = room.timeLimit * 1000;
   const done = completedRounds(room, players, results, now);
   const roundEntries = Array.from({ length: done }, (_, i) =>
-    toEntries(ids, Object.fromEntries(resultsFor(results, room.game, i + 1)), limitMs, solutions[i]?.diff),
+    toEntries(ids, Object.fromEntries(resultsFor(results, room.game, i + 1)), solutions[i]?.diff),
   );
   const table = standings(ids, roundEntries);
 

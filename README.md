@@ -25,9 +25,13 @@ Oyun bittiğinde **en kısa çözüm** gösterilir (tüm olasılıkları tarayan
 | 21–50 | 15 |
 | 51+ | 0 |
 
-**Hız bonusu:** en yakın sonuca ne kadar erken ulaşıldıysa yakınlık puanının %25'ine kadar eklenir (en fazla 125 puan). Bonus yakınlık puanıyla orantılı olduğu için hızlı ama uzak bir sonuç, yavaş ama tam bir sonucu geçemez. Soruların ~%99'unda hedef tam olarak bulunabilir; bulunamadığında fark, çözücünün bulduğu en iyi sonuca göre hesaplanır.
+**Hız bonusu (tek başına, günün sorusu):** en yakın sonuca ilk 10 saniyede ulaşıldıysa yakınlık puanının %25'i eklenir (en fazla 125 puan); bonus 2. dakikanın sonunda doğrusal olarak sıfıra iner. Süre ayarından bağımsızdır: aynı hız her ayarda aynı bonusu getirir. Bonus yakınlık puanıyla orantılı olduğu için hızlı ama uzak bir sonuç, yavaş ama tam bir sonucu geçemez.
 
-Karşılıklı modlarda her tur aynı şekilde puanlanır; toplam puan eşitse daha çok tur kazanan öne geçer.
+**En iyi olası sonuç:** soruların ~%99'unda hedef tam olarak bulunabilir; bulunamadığında fark, çözücünün bulduğu en iyi sonuca göre hesaplanır. En iyi sonuç her zaman sınırsız işlemle hesaplanır; işlem hakkı seçen oyuncu kendine zorluk koyar, kolay puan almaz.
+
+**Karşılıklı modlar:** hız bonusu yerine tur sırası bonusu eklenir. Sıra önce farka, fark eşitse süreye göredir: 1. +25, 2. +15, 3. +10, diğerleri +5 (yakınlık puanı alanlar). Toplam puan eşitse daha çok tur kazanan öne geçer.
+
+**Sıralama:** varsayılan ölçüt, her oyuncunun dönemdeki en iyi 20 oyununun toplamı. Toplam, ortalama, rekor ve oyun sayısına göre de sıralanabilir. Ekim 2026'daki bu değişiklikten önce kaydedilen skorlar da sıralamada sayılmaya devam eder.
 
 ## Geliştirme
 

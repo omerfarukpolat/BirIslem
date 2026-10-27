@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'preact/hooks';
 import { formatSeconds } from '../../game/format';
-import { rankRound, type RankedEntry, type RoundEntry, type Standing } from '../../game/match';
+import { rankRound, scoreVersusRound, type RankedEntry, type RoundEntry, type Standing } from '../../game/match';
 import { OP_SYMBOL } from '../../game/rules';
-import { scoreRound } from '../../game/scoring';
+import { ZERO_SCORE } from '../../game/scoring';
 import type { Solution } from '../../game/solver';
 import { peekSolution, solvePuzzle } from '../../game/solverClient';
 import type { Puzzle, RoundOutcome } from '../../game/types';
@@ -38,9 +38,16 @@ export function useSolutions(puzzles: Puzzle[]): (Solution | null | undefined)[]
 export function toEntries(
   playerIds: string[],
   outcomes: Record<string, Pick<RoundOutcome, 'value' | 'diff' | 'reachedAtMs' | 'steps'> | undefined>,
-  limitMs: number,
   bestPossibleDiff: number | null | undefined,
 ): RoundEntry[] {
+  const scores = scoreVersusRound(
+    playerIds.map((playerId) => ({
+      playerId,
+      diff: outcomes[playerId]?.diff ?? null,
+      reachedAtMs: outcomes[playerId]?.reachedAtMs ?? null,
+    })),
+    bestPossibleDiff,
+  );
   return playerIds.map((playerId) => {
     const o = outcomes[playerId];
     return {
@@ -49,12 +56,7 @@ export function toEntries(
       diff: o?.diff ?? null,
       reachedAtMs: o?.reachedAtMs ?? null,
       steps: o?.steps ?? [],
-      score: scoreRound({
-        diff: o?.diff ?? null,
-        reachedAtMs: o?.reachedAtMs ?? null,
-        limitMs,
-        bestPossibleDiff: bestPossibleDiff ?? 0,
-      }),
+      score: scores.get(playerId) ?? ZERO_SCORE,
     };
   });
 }

@@ -1,4 +1,5 @@
 import { Timestamp, addDoc, collection, doc, getDocs, query, setDoc, where, writeBatch } from 'firebase/firestore';
+import { sumOfBest } from '../game/scoring';
 import type { SimpleStep } from '../game/types';
 import { firestore } from './db';
 
@@ -27,6 +28,8 @@ export interface SaveScoreInput {
 export interface LeaderboardEntry {
   userId: string;
   userName: string;
+  /** Dönemin en iyi 20 oyununun toplamı: varsayılan sıralama */
+  bestOfScore: number;
   totalScore: number;
   gamesPlayed: number;
   averageScore: number;
@@ -108,12 +111,14 @@ export async function fetchLeaderboard(period: LeaderboardPeriod): Promise<Leade
   const q = query(collection(firestore(), 'scores'), where('createdAt', '>=', Timestamp.fromDate(periodStart(period))));
   const snap = await getDocs(q);
   const byUser = new Map<string, LeaderboardEntry>();
+  const scoresOf = new Map<string, number[]>();
   snap.forEach((d) => {
     const s = d.data() as ScoreDoc;
     if (s.v !== SCORE_VERSION || typeof s.score !== 'number') return;
     const e = byUser.get(s.userId) ?? {
       userId: s.userId,
       userName: s.userName,
+      bestOfScore: 0,
       totalScore: 0,
       gamesPlayed: 0,
       averageScore: 0,
@@ -126,8 +131,13 @@ export async function fetchLeaderboard(period: LeaderboardPeriod): Promise<Leade
     if (s.diff === 0) e.exact += 1;
     e.userName = s.userName || e.userName;
     byUser.set(s.userId, e);
+    scoresOf.set(s.userId, [...(scoresOf.get(s.userId) ?? []), s.score]);
   });
-  return [...byUser.values()].map((e) => ({ ...e, averageScore: Math.round(e.totalScore / e.gamesPlayed) }));
+  return [...byUser.values()].map((e) => ({
+    ...e,
+    bestOfScore: sumOfBest(scoresOf.get(e.userId) ?? []),
+    averageScore: Math.round(e.totalScore / e.gamesPlayed),
+  }));
 }
 
 export async function fetchDaily(puzzleId: string): Promise<DailyEntry[]> {

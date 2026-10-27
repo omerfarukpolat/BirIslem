@@ -76,8 +76,9 @@ export default function Solo() {
   const [game, setGame] = useState(() => gameFromQuery(query, settings.value) ?? newGame(settings.value));
   const [outcome, setOutcome] = useState<RoundOutcome | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const solution = useSolution(game.puzzle, game.opLimit);
-  const score = useRoundScore(outcome, solution, game.timeLimit * 1000);
+  // İşlem hakkı olsa da çözüm ve puan sınırsız işleme göre: hak kolaylık değil, zorluktur
+  const solution = useSolution(game.puzzle);
+  const score = useRoundScore(outcome, solution);
   const recorded = useRef(0);
 
   useEffect(() => {
@@ -167,7 +168,13 @@ export default function Solo() {
         <div class="result-stack">
           {ch && score && <ChallengeVerdict ch={ch} mine={score.total} />}
           <ScoreCard outcome={outcome} score={score} target={game.puzzle.target} />
-          <SolutionCompare mine={outcome.steps} myValue={outcome.value} solution={solution} target={game.puzzle.target} />
+          <SolutionCompare
+            mine={outcome.steps}
+            myValue={outcome.value}
+            solution={solution}
+            target={game.puzzle.target}
+            opLimit={game.opLimit}
+          />
           <div class="result-actions">
             <button type="button" class="btn btn--primary btn--lg" onClick={() => restart()} autofocus>
               Yeni soru

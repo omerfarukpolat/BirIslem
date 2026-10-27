@@ -1,14 +1,18 @@
 /**
- * Puanlama (v2)
+ * Puanlama
  *
  * Yakınlık puanı: sonucun, o soruda ulaşılabilecek en iyi sonuca uzaklığına göre
- * verilir. Soruların ~%99'unda tam sonuç mümkün olduğundan bu çoğu zaman
- * doğrudan hedefe olan farktır; tam sonuç imkânsızsa en iyi olası sonucu bulan
- * oyuncu tam puan alır.
+ * verilir. En iyi sonuç her zaman sınırsız işlemle hesaplanır: işlem hakkı
+ * oyuncunun kendine koyduğu bir zorluktur, puanı kolaylaştırmaz. Soruların
+ * ~%99'unda tam sonuç mümkün olduğundan bu çoğu zaman doğrudan hedefe olan
+ * farktır; tam sonuç imkânsızsa en iyi olası sonucu bulan oyuncu tam puan alır.
  *
- * Hız bonusu: en yakın sonuca ne kadar erken ulaşıldıysa yakınlık puanının
- * %25'ine kadar eklenir. Bonus yakınlık puanıyla orantılı olduğu için hızlı
- * ama uzak bir sonuç, yavaş ama tam bir sonucu geçemez.
+ * Tek başına ve günün sorusu: en yakın sonuca ilk 10 saniyede ulaşılırsa yakınlık
+ * puanının %25'i kadar hız bonusu eklenir; bonus 2. dakikanın sonunda sıfıra
+ * iner. Süre ayarından bağımsızdır: aynı hız her ayarda aynı bonusu getirir.
+ *
+ * Karşılıklı: hız bonusu yerine tur sırası bonusu (bkz. match.ts). Her iki
+ * bonusta da daha yakın bir sonuç, daha uzak ama hızlı bir sonucu geçer.
  */
 
 export interface Band {
@@ -28,7 +32,35 @@ export const BANDS: readonly Band[] = [
 ];
 
 export const SPEED_SHARE = 0.25;
+/** Bu süreye kadar tam hız bonusu */
+export const SPEED_FULL_MS = 10_000;
+/** Bu süreden sonra hız bonusu yok */
+export const SPEED_ZERO_MS = 120_000;
 export const MAX_SCORE = BANDS[0].points + Math.round(BANDS[0].points * SPEED_SHARE);
+
+/** Karşılıklı modda tur sırası bonusu: 1. +25, 2. +15, 3. +10, sonrakiler +5 */
+export const PLACE_BONUS: readonly number[] = [25, 15, 10, 5];
+
+export function placeBonus(rank: number): number {
+  return PLACE_BONUS[Math.min(Math.max(rank, 1), PLACE_BONUS.length) - 1];
+}
+
+/** Sıralamada her oyuncunun dönem içindeki en iyi bu kadar oyunu toplanır */
+export const LEADERBOARD_BEST_OF = 20;
+
+/** En yüksek `n` değerin toplamı */
+export function sumOfBest(values: readonly number[], n: number = LEADERBOARD_BEST_OF): number {
+  return values
+    .slice()
+    .sort((a, b) => b - a)
+    .slice(0, n)
+    .reduce((sum, v) => sum + v, 0);
+}
+
+/** 0–1: en yakın sonuca ne kadar erken ulaşıldı */
+export function speedRatio(reachedAtMs: number): number {
+  return Math.min(1, Math.max(0, (SPEED_ZERO_MS - reachedAtMs) / (SPEED_ZERO_MS - SPEED_FULL_MS)));
+}
 
 export function closenessPoints(effectiveDiff: number): number {
   for (const band of BANDS) if (effectiveDiff <= band.upTo) return band.points;
@@ -37,7 +69,8 @@ export function closenessPoints(effectiveDiff: number): number {
 
 export interface Score {
   closeness: number;
-  speed: number;
+  /** Tek başına modda hız bonusu, karşılıklı modda tur sırası bonusu */
+  bonus: number;
   total: number;
   /** Ulaşılabilecek en iyi sonuca göre fark (sonuç yoksa null) */
   effectiveDiff: number | null;
@@ -46,20 +79,24 @@ export interface Score {
 export interface ScoreInput {
   diff: number | null;
   reachedAtMs: number | null;
-  limitMs: number;
-  /** Bu soruda ulaşılabilecek en küçük fark (bilinmiyorsa 0 kabul edilir) */
+  /** Bu soruda sınırsız işlemle ulaşılabilecek en küçük fark (bilinmiyorsa 0 kabul edilir) */
   bestPossibleDiff?: number | null;
 }
 
-export const ZERO_SCORE: Score = { closeness: 0, speed: 0, total: 0, effectiveDiff: null };
+export const ZERO_SCORE: Score = { closeness: 0, bonus: 0, total: 0, effectiveDiff: null };
 
-export function scoreRound({ diff, reachedAtMs, limitMs, bestPossibleDiff }: ScoreInput): Score {
-  if (diff === null || reachedAtMs === null) return ZERO_SCORE;
-  const effectiveDiff = Math.max(0, diff - (bestPossibleDiff ?? 0));
+/** En iyi olası sonuca göre fark; sonuç yoksa null */
+export function effectiveDiffOf(diff: number | null, bestPossibleDiff?: number | null): number | null {
+  return diff === null ? null : Math.max(0, diff - (bestPossibleDiff ?? 0));
+}
+
+/** Tek başına ve günün sorusu: yakınlık + hız bonusu */
+export function scoreRound({ diff, reachedAtMs, bestPossibleDiff }: ScoreInput): Score {
+  const effectiveDiff = effectiveDiffOf(diff, bestPossibleDiff);
+  if (effectiveDiff === null || reachedAtMs === null) return ZERO_SCORE;
   const closeness = closenessPoints(effectiveDiff);
-  const ratio = limitMs > 0 ? Math.min(1, Math.max(0, 1 - reachedAtMs / limitMs)) : 0;
-  const speed = Math.round(closeness * SPEED_SHARE * ratio);
-  return { closeness, speed, total: closeness + speed, effectiveDiff };
+  const bonus = Math.round(closeness * SPEED_SHARE * speedRatio(reachedAtMs));
+  return { closeness, bonus, total: closeness + bonus, effectiveDiff };
 }
 
 /** Sıralama için karşılaştırma: puan ↓, fark ↑, süre ↑ */
