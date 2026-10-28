@@ -40,6 +40,33 @@ test('a signed-in player can delete the account and all scores', async ({ page }
   expect(await scoresOf(page, uid)).toBe(0);
 });
 
+test('the leaderboard ranks by the sum of the best 20 games by default', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForFunction(() => typeof (window as unknown as Record<string, unknown>).__emulatorGoogleSignIn === 'function', null, { timeout: 15_000 });
+  const name = `Sıralama ${Date.now()}`;
+  await page.evaluate((n) => (window as unknown as { __emulatorGoogleSignIn: (n: string) => Promise<unknown> }).__emulatorGoogleSignIn(n), name);
+  await expect(page.locator('.avatar-btn')).toBeVisible();
+
+  let total = 0;
+  for (let i = 0; i < 2; i++) {
+    await page.goto('/game');
+    await waitForPlay(page);
+    await tile(page, 5);
+    await op(page, '+');
+    await tile(page, 0);
+    await finish(page);
+    await expect(page.locator('.save-note')).toContainText('Skorun kaydedildi', { timeout: 10_000 });
+    total += Number((await page.locator('.scorecard__score').innerText()).replace(/\D/g, ''));
+  }
+
+  await page.goto('/leaderboard');
+  await expect(page.getByRole('radio', { name: 'En iyi 20' })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.locator('.lb-sort__note')).toContainText('en iyi 20 oyununun toplamı');
+  const row = page.locator('.lb-row', { hasText: name });
+  await expect(row).toContainText('2 oyun');
+  await expect(row.locator('.lb-value')).toHaveText(String(total));
+});
+
 test('the iOS app shell hides Google sign-in but keeps the game', async ({ page }) => {
   await page.goto('/?app=ios');
   await expect(page.locator('.hero h1')).toBeVisible();

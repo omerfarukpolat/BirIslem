@@ -83,3 +83,19 @@ test('challenge links show the rival and the verdict', async ({ page }) => {
   await expect(page.locator('.challenge-verdict')).toContainText('Deniz geride kaldı', { timeout: 5000 });
   await expect(page.locator('.save-note')).toContainText('sıralamaya kaydedilmez');
 });
+
+test('an operation limit is a handicap: closeness is measured against the unlimited best', async ({ page }) => {
+  // 1 işlem hakkıyla en iyisi 45 × 8 = 360 (6 fark); sınırsız işlemle 354 tam bulunuyor
+  await page.goto(`${PUZZLE}&t=120&i=1`);
+  await page.locator('.tiles button').first().waitFor({ timeout: 6000 });
+  await tile(page, 5);
+  await op(page, '×');
+  await tile(page, 3);
+  await finish(page);
+  await expect(page.locator('.scorecard__verdict')).toContainText('6 fark');
+  // Yakınlık 45 (6–10 fark) + en fazla %25 hız bonusu
+  await expect(page.locator('.scorecard__parts')).toContainText('Yakınlık 45');
+  const score = Number((await page.locator('.scorecard__score').innerText()).replace(/\D/g, ''));
+  expect(score).toBeLessThanOrEqual(57);
+  await expect(page.locator('.compare')).toContainText('1 işlem hakkıyla bu sonuca ulaşılamıyordu');
+});

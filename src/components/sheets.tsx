@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'preact/hooks';
 import { formatTimeLimit } from '../game/format';
-import { BANDS, MAX_SCORE } from '../game/scoring';
+import { BANDS, LEADERBOARD_BEST_OF, MAX_SCORE, PLACE_BONUS, SPEED_FULL_MS, SPEED_ZERO_MS } from '../game/scoring';
 import { deleteAccount, prepareReauth, signOut, user } from '../state/auth';
 import { OP_LIMIT_OPTIONS, TIME_OPTIONS, settings, soundOn, theme, type GameSettings, type Theme } from '../state/settings';
 import { Icon } from './Icon';
@@ -135,20 +135,27 @@ export function HowToSheet({ open, onClose }: { open: boolean; onClose: () => vo
           </tbody>
         </table>
         <p class="muted">
-          <b>Hız bonusu:</b> en yakın sonucuna ne kadar erken ulaştıysan yakınlık puanının %25'ine kadar eklenir. Bu yüzden
-          yavaş ama tam sonuç, hızlı ama uzak bir sonucu her zaman geçer.
+          <b>Hız bonusu:</b> en yakın sonucuna ilk {SPEED_FULL_MS / 1000} saniyede ulaşırsan yakınlık puanının %25'i
+          eklenir; bonus {SPEED_ZERO_MS / 60_000}. dakikanın sonunda sıfıra iner. Süre ayarı bonusu değiştirmez. Yavaş
+          ama tam sonuç, hızlı ama uzak bir sonucu her zaman geçer.
         </p>
         <p class="muted">
           Bazı sorularda hedef tam olarak bulunamaz. O zaman fark, <b>bulunabilecek en iyi sonuca</b> göre hesaplanır; en
-          iyisini bulan tam puan alır.
+          iyisini bulan tam puan alır. İşlem hakkı seçtiysen de en iyi sonuç sınırsız işlemle hesaplanır: işlem hakkı
+          kendine koyduğun bir zorluktur.
+        </p>
+        <p class="muted">
+          <b>Sıralama:</b> her oyuncunun dönemdeki en iyi {LEADERBOARD_BEST_OF} oyununun toplamı.
         </p>
       </div>
 
       <div class="rules-table">
         <h3>Karşılıklı</h3>
         <p class="muted">
-          Herkes aynı soruyu çözer, puanlar aynı şekilde hesaplanır. Turların toplamı kazananı belirler; eşitlikte daha çok
-          tur kazanan öne geçer.
+          Herkes aynı soruyu çözer. Yakınlık puanına hız bonusu yerine <b>tur sırası bonusu</b> eklenir: daha yakın olan,
+          eşitse daha hızlı olan öne geçer. 1. +{PLACE_BONUS[0]}, 2. +{PLACE_BONUS[1]}, 3. +{PLACE_BONUS[2]}, diğerleri +
+          {PLACE_BONUS[3]} (yakınlık puanı alanlar). Turların toplamı kazananı belirler; eşitlikte daha çok tur kazanan öne
+          geçer.
         </p>
       </div>
 

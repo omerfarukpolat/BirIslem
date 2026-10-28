@@ -4,10 +4,10 @@ import type { Solution } from '../game/solver';
 import type { RoundOutcome } from '../game/types';
 
 /**
- * Turun puanı. Çözücü sonucu (ulaşılabilecek en iyi fark) gelince hesaplanır;
- * çözücü takılırsa kısa bir beklemeden sonra hedefe göre puanlanır.
+ * Turun puanı. Çözücü sonucu (sınırsız işlemle ulaşılabilecek en iyi fark) gelince
+ * hesaplanır; çözücü takılırsa kısa bir beklemeden sonra hedefe göre puanlanır.
  */
-export function useRoundScore(outcome: RoundOutcome | null, solution: Solution | null | undefined, limitMs: number): Score | null {
+export function useRoundScore(outcome: RoundOutcome | null, solution: Solution | null | undefined): Score | null {
   const [timedOut, setTimedOut] = useState(false);
   useEffect(() => {
     setTimedOut(false);
@@ -22,8 +22,7 @@ export function useRoundScore(outcome: RoundOutcome | null, solution: Solution |
     return scoreRound({
       diff: outcome.diff,
       reachedAtMs: outcome.reachedAtMs,
-      limitMs,
       bestPossibleDiff: solution?.diff ?? 0,
     });
-  }, [outcome, solution === undefined ? undefined : solution?.diff ?? null, timedOut, limitMs]);
+  }, [outcome, solution === undefined ? undefined : solution?.diff ?? null, timedOut]);
 }

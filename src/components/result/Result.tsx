@@ -60,7 +60,7 @@ export function ScoreCard({
               Yakınlık <b class="num">{score.closeness}</b>
             </span>
             <span>
-              Hız <b class="num">+{score.speed}</b>
+              Hız <b class="num">+{score.bonus}</b>
             </span>
           </p>
         )}
@@ -104,11 +104,14 @@ export function SolutionCompare({
   myValue,
   solution,
   target,
+  opLimit = 0,
 }: {
   mine: SimpleStep[];
   myValue: number | null;
   solution: Solution | null | undefined;
   target: number;
+  /** Oyuncunun işlem hakkı (0 = sınırsız) */
+  opLimit?: number;
 }) {
   const sameLength = solution && myValue === solution.value && mine.length <= solution.steps.length;
   return (
@@ -132,6 +135,9 @@ export function SolutionCompare({
               <p class="muted compare__note">
                 Bu sayılarla {target} tam olarak bulunamıyor; en yakın {solution.value}.
               </p>
+            )}
+            {opLimit > 0 && solution.steps.length > opLimit && (
+              <p class="muted compare__note">{opLimit} işlem hakkıyla bu sonuca ulaşılamıyordu.</p>
             )}
           </>
         )}

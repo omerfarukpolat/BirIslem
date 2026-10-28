@@ -173,7 +173,7 @@ function Result({
 }) {
   const { route } = useLocation();
   const solution = useSolution(puzzle);
-  const score = useRoundScore(outcome, solution, DAILY_TIME_LIMIT * 1000);
+  const score = useRoundScore(outcome, solution);
 
   // Puan hesaplanınca günlük kaydı yaz, yarım deneme kaydını temizle
   useEffect(() => {

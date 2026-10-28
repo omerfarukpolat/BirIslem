@@ -5,6 +5,7 @@ import { SignInButton } from '../components/SignInButton';
 import { Segmented, TopBar, useTitle } from '../components/ui';
 import { dailyKey, dailyNumber } from '../game/daily';
 import { formatSeconds } from '../game/format';
+import { LEADERBOARD_BEST_OF } from '../game/scoring';
 import { firebaseEnabled } from '../services/config';
 import {
   fetchDaily,
@@ -19,7 +20,7 @@ import { googleSignInAvailable, user } from '../state/auth';
 import './leaderboard.css';
 
 type Tab = 'soru' | LeaderboardPeriod;
-type SortKey = 'totalScore' | 'bestScore' | 'averageScore' | 'gamesPlayed';
+type SortKey = 'bestOfScore' | 'totalScore' | 'averageScore' | 'bestScore' | 'gamesPlayed';
 
 const TABS: { value: Tab; label: string }[] = [
   { value: 'soru', label: 'Günün sorusu' },
@@ -29,11 +30,17 @@ const TABS: { value: Tab; label: string }[] = [
 ];
 
 const SORTS: { value: SortKey; label: string }[] = [
+  { value: 'bestOfScore', label: `En iyi ${LEADERBOARD_BEST_OF}` },
   { value: 'totalScore', label: 'Toplam' },
-  { value: 'bestScore', label: 'En iyi' },
   { value: 'averageScore', label: 'Ortalama' },
+  { value: 'bestScore', label: 'Rekor' },
   { value: 'gamesPlayed', label: 'Oyun' },
 ];
+
+const SORT_NOTE: Partial<Record<SortKey, string>> = {
+  bestOfScore: `Dönemdeki en iyi ${LEADERBOARD_BEST_OF} oyununun toplamı: çok oynamak değil iyi oynamak öne geçirir.`,
+  bestScore: 'Dönemdeki en yüksek tek oyun puanı.',
+};
 
 type Load<T> = { state: 'loading' } | { state: 'error' } | { state: 'ok'; data: T };
 
@@ -41,7 +48,7 @@ export default function Leaderboard() {
   useTitle('Sıralama');
   const { query, route } = useLocation();
   const [tab, setTab] = useState<Tab>(TABS.some((t) => t.value === query.tab) ? (query.tab as Tab) : 'daily');
-  const [sort, setSort] = useState<SortKey>('totalScore');
+  const [sort, setSort] = useState<SortKey>('bestOfScore');
   const [reload, setReload] = useState(0);
   const [board, setBoard] = useState<Load<LeaderboardEntry[]>>({ state: 'loading' });
   const [daily, setDaily] = useState<Load<DailyEntry[]>>({ state: 'loading' });
@@ -76,7 +83,7 @@ export default function Leaderboard() {
   }, [u?.uid]);
 
   const sorted = useMemo(
-    () => (board.state === 'ok' ? board.data.slice().sort((a, b) => b[sort] - a[sort] || b.totalScore - a.totalScore) : []),
+    () => (board.state === 'ok' ? board.data.slice().sort((a, b) => b[sort] - a[sort] || b.averageScore - a.averageScore) : []),
     [board, sort],
   );
 
@@ -131,6 +138,7 @@ export default function Leaderboard() {
           <div class="lb-sort">
             <span class="eyebrow">Sırala</span>
             <Segmented label="Sıralama ölçütü" value={sort} options={SORTS} onChange={setSort} />
+            {SORT_NOTE[sort] && <p class="lb-sort__note muted">{SORT_NOTE[sort]}</p>}
           </div>
           {board.state === 'loading' && <Skeleton />}
           {board.state === 'error' && <LoadError onRetry={retry} />}
@@ -171,7 +179,7 @@ export default function Leaderboard() {
               <dd class="num">{mine.average}</dd>
             </div>
             <div>
-              <dt>En iyi</dt>
+              <dt>Rekor</dt>
               <dd class="num">{mine.best}</dd>
             </div>
           </dl>

@@ -57,7 +57,6 @@ export default function Party() {
     [party?.config],
   );
   const solutions = useSolutions(party?.puzzles ?? []);
-  const limitMs = (party?.config.timeLimit ?? 60) * 1000;
   const ids = party?.config.players.map((p) => p.id) ?? [];
 
   const roundEntries: RoundEntry[][] = useMemo(
@@ -66,7 +65,7 @@ export default function Party() {
         ? party.outcomes.map((o, r) =>
             // Oynanmakta olan turun sonuçları, tur bitmeden genel duruma yansımaz
             r < party.round || party.phase === 'summary' || party.phase === 'final'
-              ? toEntries(ids, o, limitMs, solutions[r]?.diff)
+              ? toEntries(ids, o, solutions[r]?.diff)
               : [],
           )
         : [],

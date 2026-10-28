@@ -1,5 +1,42 @@
-import { compareRankable, rankBy, type Score } from './scoring';
+import { closenessPoints, compareRankable, effectiveDiffOf, placeBonus, rankBy, ZERO_SCORE, type Score } from './scoring';
 import type { SimpleStep } from './types';
+
+export interface VersusResult {
+  playerId: string;
+  diff: number | null;
+  reachedAtMs: number | null;
+}
+
+const ascending = (a: number, b: number) => (a === b ? 0 : a < b ? -1 : 1);
+
+/**
+ * Karşılıklı modda bir turun puanları: yakınlık + tur sırası bonusu. Sıra önce
+ * en iyi olası sonuca olan farka, fark eşitse en yakın sonuca ulaşma süresine
+ * göredir; tam eşitlikte aynı sıra ve aynı bonus. Yakınlık puanı olmayan bonus almaz.
+ */
+export function scoreVersusRound(results: readonly VersusResult[], bestPossibleDiff?: number | null): Map<string, Score> {
+  const rows = results.map((r) => {
+    const effectiveDiff = r.reachedAtMs === null ? null : effectiveDiffOf(r.diff, bestPossibleDiff);
+    return { r, effectiveDiff };
+  });
+  const ranked = rankBy(
+    rows,
+    (x, y) =>
+      ascending(x.effectiveDiff ?? Infinity, y.effectiveDiff ?? Infinity) ||
+      ascending(x.r.reachedAtMs ?? Infinity, y.r.reachedAtMs ?? Infinity),
+  );
+  const out = new Map<string, Score>();
+  for (const { item, rank } of ranked) {
+    if (item.effectiveDiff === null) {
+      out.set(item.r.playerId, ZERO_SCORE);
+      continue;
+    }
+    const closeness = closenessPoints(item.effectiveDiff);
+    const bonus = closeness > 0 ? placeBonus(rank) : 0;
+    out.set(item.r.playerId, { closeness, bonus, total: closeness + bonus, effectiveDiff: item.effectiveDiff });
+  }
+  return out;
+}
 
 /** Karşılıklı modda bir oyuncunun bir turdaki sonucu */
 export interface RoundEntry {
