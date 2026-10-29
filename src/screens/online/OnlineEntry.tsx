@@ -6,6 +6,7 @@ import { Segmented, TopBar, useTitle } from '../../components/ui';
 import { formatTimeLimit } from '../../game/format';
 import { firebaseEnabled } from '../../services/config';
 import { ensureSession, user } from '../../state/auth';
+import { player } from '../../state/player';
 import { cleanName, NAME_MAX, nickname } from '../../state/profile';
 import { readJSON, writeJSON } from '../../lib/storage';
 import { needsGoogle, onlineErrorText } from './errors';
@@ -18,7 +19,7 @@ export default function OnlineEntry() {
   useTitle('Çevrimiçi oda');
   const { route } = useLocation();
   const prefs = readJSON(PREFS_KEY, { rounds: 5, timeLimit: 60 });
-  const [name, setName] = useState(nickname.value || user.value?.name.split(' ')[0] || '');
+  const [name, setName] = useState(nickname.value || (player.value?.anonymous ? '' : user.value?.name.split(' ')[0]) || '');
   const [rounds, setRounds] = useState<number>(prefs.rounds);
   const [timeLimit, setTimeLimit] = useState<number>(prefs.timeLimit);
   const [code, setCode] = useState('');

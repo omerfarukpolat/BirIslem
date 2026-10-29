@@ -1,6 +1,7 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect } from 'preact/hooks';
-import { googleSignInAvailable, prepareSignIn, signIn, signInReady } from '../state/auth';
+import { googleSignInAvailable, prepareSignIn, signInReady } from '../state/auth';
+import { signInWithGoogle } from '../state/player';
 import { GoogleMark } from './Icon';
 
 /**
@@ -28,7 +29,7 @@ export function SignInButton({
       disabled={!ready}
       aria-busy={!ready}
       aria-label={ariaLabel}
-      onClick={() => signIn().then((ok) => ok && onSignedIn?.())}
+      onClick={() => signInWithGoogle().then((ok) => ok && onSignedIn?.())}
     >
       <GoogleMark size={18} />
       {label}

@@ -141,3 +141,15 @@ kbd {
   height: 100%;
   object-fit: cover;
 }
+
+.account__privacy {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.avatar--anon {
+  background: var(--paper-2);
+  color: var(--ink-2);
+}

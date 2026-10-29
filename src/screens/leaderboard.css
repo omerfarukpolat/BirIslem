@@ -167,3 +167,19 @@
 .lb-sort__note {
   font-size: 14px;
 }
+
+.lb-anon {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  font-size: 15px;
+}
+
+.lb-anon svg {
+  flex: none;
+  margin-top: 2px;
+}

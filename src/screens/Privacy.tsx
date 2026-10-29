@@ -11,7 +11,7 @@ export default function Privacy() {
       <TopBar title="Gizlilik" />
       <article class="privacy__body">
         <h1>Gizlilik politikası</h1>
-        <p class="muted">Son güncelleme: 13 Ekim 2026</p>
+        <p class="muted">Son güncelleme: 29 Ekim 2026</p>
         <p>
           Bir İşlem; birislem.app sitesi ve Android, iOS uygulamalarıyla oynanan bir matematik oyunudur. Bu sayfa hangi
           verilerin neden tutulduğunu ve onları nasıl silebileceğini anlatır.
@@ -32,7 +32,24 @@ export default function Privacy() {
           </li>
           <li>E-posta adresin skor kayıtlarına yazılmaz ve kimseye gösterilmez.</li>
         </ul>
-        <p>iOS uygulamasında Google ile giriş yoktur; orada skorlar kaydedilmez.</p>
+        <p>iOS uygulamasında Google ile giriş yoktur; orada skorlarını anonim olarak kaydedebilirsin.</p>
+
+        <h2 id="anonim">Anonim oyuncu ve anonim mod</h2>
+        <ul>
+          <li>
+            Google hesabı olmadan <b>Anonim kaydet</b>'i seçersen Firebase'de (Google) senin için bir anonim kullanıcı
+            kimliği oluşturulur. Ad ya da e-posta istenmez; skorların ve oyun sonuçların bu kimlikle saklanır.
+          </li>
+          <li>
+            Google ile giriş yaptıysan Hesap'tan <b>anonim moda</b> geçebilirsin. Geçmiş ve sonraki skorların herkese açık
+            sıralamadan kaldırılır.
+          </li>
+          <li>
+            Anonim skorları yalnızca sen görebilirsin; sunucu kuralları başka kullanıcıların onları okumasına izin vermez.
+            Anonimken sıralamada da yalnızca kendi sonuçlarını görürsün.
+          </li>
+          <li>Anonim kimlik bu cihaza bağlıdır. Google hesabına bağlarsan skorların korunur.</li>
+        </ul>
 
         <h2>Çevrimiçi odalar</h2>
         <p>
@@ -49,8 +66,8 @@ export default function Privacy() {
 
         <h2 id="silme">Hesap ve veri silme</h2>
         <p>
-          Hesabını ve sıralamadaki bütün skorlarını istediğin zaman silebilirsin: giriş yap, sağ üstteki profil resmine
-          dokun ve <b>Hesabımı sil</b>'i seç. Bu işlem uygulamada ve birislem.app sitesinde aynıdır. Silinen veriler geri
+          Hesabını ve bütün skorlarını istediğin zaman silebilirsin: sağ üstteki profil resmine dokun ve{' '}
+          <b>Hesabımı sil</b>'i (anonim oyuncuysan <b>Anonim kaydımı sil</b>'i) seç. Bu işlem uygulamada ve birislem.app sitesinde aynıdır. Silinen veriler geri
           getirilemez. Silme işlemini yapamıyorsan aşağıdaki adresten yazabilirsin; hesabın 30 gün içinde silinir.
         </p>
 

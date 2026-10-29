@@ -6,7 +6,8 @@ import { SignInButton } from '../components/SignInButton';
 import { useTitle } from '../components/ui';
 import { dailyKey, dailyNumber } from '../game/daily';
 import { formatTimeLimit } from '../game/format';
-import { user } from '../state/auth';
+import { session } from '../state/auth';
+import { player } from '../state/player';
 import { firebaseEnabled } from '../services/config';
 import { settings } from '../state/settings';
 import { currentStreak, stats } from '../state/stats';
@@ -23,7 +24,7 @@ export default function Home() {
   const streak = currentStreak(today);
   const s = settings.value;
   const st = stats.value;
-  const u = user.value;
+  const p = player.value;
 
   return (
     <main class="page home">
@@ -37,9 +38,9 @@ export default function Home() {
             <Icon name="sliders" />
           </button>
           {firebaseEnabled &&
-            (u ? (
+            (p ? (
               <button type="button" class="avatar-btn" aria-label="Hesap" onClick={() => setSheet('account')}>
-                <Avatar name={u.name} photo={u.photoURL} size={36} />
+                {p.google ? <Avatar name={p.name} photo={session.value?.photoURL ?? null} size={36} /> : <Avatar anonymous size={36} />}
               </button>
             ) : (
               <SignInButton class="btn btn--sm signin" ariaLabel="Google ile giriş yap" label={<span>Giriş</span>} />

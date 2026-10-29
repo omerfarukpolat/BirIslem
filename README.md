@@ -31,6 +31,8 @@ Oyun bittiğinde **en kısa çözüm** gösterilir (tüm olasılıkları tarayan
 
 **Karşılıklı modlar:** hız bonusu yerine tur sırası bonusu eklenir. Sıra önce farka, fark eşitse süreye göredir: 1. +25, 2. +15, 3. +10, diğerleri +5 (yakınlık puanı alanlar). Toplam puan eşitse daha çok tur kazanan öne geçer.
 
+**Anonim oyuncular:** Google hesabı olmadan "Anonim kaydet" seçen oyuncunun ya da Hesap'tan anonim moda geçen Google kullanıcısının skorları `privateScores` koleksiyonunda tutulur. Kurallar gereği bu kayıtları yalnızca sahibi okuyabilir; anonim oyuncu sıralamada yalnızca kendini görür. Anonim moda geçince geçmiş skorlar da herkese açık sıralamadan taşınır. Anonim hesap Google'a bağlanınca kimliği ve skorları korunur.
+
 **Sıralama:** varsayılan ölçüt, her oyuncunun dönemdeki en iyi 20 oyununun toplamı. Toplam, ortalama, rekor ve oyun sayısına göre de sıralanabilir. Ekim 2026'daki bu değişiklikten önce kaydedilen skorlar da sıralamada sayılmaya devam eder.
 
 ## Geliştirme
@@ -80,10 +82,11 @@ Vercel ayarları `vercel.json` içinde (Vite, çıktı klasörü `build/`, tek s
 
 ### Firebase kurulumu
 
-1. **Authentication → Sign-in method:** Google'ı etkinleştir. Çevrimiçi odalara girişsiz katılım için **Anonim** girişi de etkinleştir (kapalıysa oyuncudan Google ile giriş istenir).
+1. **Authentication → Sign-in method:** Google'ı etkinleştir. Çevrimiçi odalara girişsiz katılım ve anonim skor kaydı için **Anonim** girişi de etkinleştir (kapalıysa oyuncudan Google ile giriş istenir).
 2. **Firestore kuralları:** Firebase Console → Firestore Database → Rules'a `firestore.rules` içeriğini yapıştırıp Publish, ya da `firebase deploy --only firestore:rules`.
    - Eski çevrimiçi oda denemesinin `gameRooms` kuralı bu dosyada bilerek yok: yeni sürüm `rooms` koleksiyonunu kullanıyor. Kurallar yayınlanınca `gameRooms` erişime kapanır; içindeki eski kayıtlar silinmez.
    - Skorlar yalnızca Google ile giriş yapmış kullanıcı tarafından, kendi adına ve bir kez yazılabilir; günün sorusu kullanıcı başına günde bir kayıttır.
+   - Anonim skorlar (`privateScores`) ve oyuncu tercihleri (`profiles`) yalnızca sahibine açıktır; listelenemez, başkası okuyamaz.
    - Odalar kodla okunur, listelenemez; turu yalnızca oda sahibi ilerletir, oda sahibi koparsa bir oyuncu yönetimi devralabilir; herkes yalnızca kendi sonucunu, o anki tur için bir kez gönderebilir.
 3. **(İsteğe bağlı) Eski odaları temizleme:** Firestore → TTL ilkeleri'nde `rooms`, `players` ve `results` koleksiyon grupları için `expiresAt` alanını seç. Odalar 24 saat sonra silinir.
 
