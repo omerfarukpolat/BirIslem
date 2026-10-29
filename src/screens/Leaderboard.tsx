@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { Icon } from '../components/Icon';
+import { PrivacyChoice } from '../components/PrivacyChoice';
 import { SignInButton } from '../components/SignInButton';
 import { Segmented, TopBar, useTitle } from '../components/ui';
 import { dailyKey, dailyNumber } from '../game/daily';
@@ -47,7 +48,7 @@ const SORT_NOTE: Partial<Record<SortKey, string>> = {
 
 type Load<T> = { state: 'loading' } | { state: 'error' } | { state: 'ok'; data: T };
 
-type View = { kind: 'public' } | { kind: 'private'; uid: string; google: boolean } | { kind: 'error' };
+type View = { kind: 'public' } | { kind: 'private'; uid: string; google: boolean } | { kind: 'ask' } | { kind: 'error' };
 
 export default function Leaderboard() {
   useTitle('Sıralama');
@@ -75,12 +76,18 @@ export default function Leaderboard() {
     let alive = true;
     setView(null);
     loadProfile(s.uid, !s.anonymous)
-      .then((anonymous) => alive && setView(anonymous ? { kind: 'private', uid: s.uid, google: !s.anonymous } : { kind: 'public' }))
+      .then((privacy) => {
+        if (!alive) return;
+        if (privacy === 'anonymous') setView({ kind: 'private', uid: s.uid, google: !s.anonymous });
+        // Görünürlüğünü seçmemiş oyuncuya önce sorulur; seçene kadar sıralama yüklenmez
+        else if (privacy === 'unknown' && !s.anonymous) setView({ kind: 'ask' });
+        else setView({ kind: 'public' });
+      })
       .catch(() => alive && setView({ kind: 'error' }));
     return () => {
       alive = false;
     };
-  }, [ready, s?.uid, s?.anonymous, p?.anonymous, reload]);
+  }, [ready, s?.uid, s?.anonymous, p?.privacy, reload]);
 
   useEffect(() => {
     if (view?.kind !== 'public') return;
@@ -179,7 +186,15 @@ export default function Leaderboard() {
         </p>
       )}
 
-      {tab === 'soru' ? (
+      {view?.kind === 'ask' ? (
+        <div class="save-note save-note--choice">
+          <p>
+            <b>Sıralamada nasıl görünmek istersin?</b> Seçince sıralama açılır; istediğin zaman Hesap'tan
+            değiştirebilirsin.
+          </p>
+          <PrivacyChoice />
+        </div>
+      ) : tab === 'soru' ? (
         <>
           <p class="lb-caption muted">
             #{dailyNumber(today)} · {privateView ? 'bugünkü sonucun' : 'herkes aynı soruyu, tek hakla çözdü'}

@@ -14,3 +14,12 @@ export async function finish(page: Page) {
 export async function waitForPlay(page: Page) {
   await page.locator('.tiles button').first().waitFor({ timeout: 10_000 });
 }
+
+/** Görünürlük sorusunu yanıtlar (ana sayfadaki pencere, oyun sonu ya da sıralama) */
+export async function choosePrivacy(page: Page, choice: 'Görünür' | 'Anonim') {
+  await page.getByRole('button', { name: new RegExp(`^${choice}`) }).first().click();
+  await page
+    .locator('.toast')
+    .filter({ hasText: choice === 'Anonim' ? 'Anonimsin' : 'adınla görünüyorsun' })
+    .waitFor({ timeout: 10_000 });
+}

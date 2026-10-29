@@ -41,8 +41,12 @@ export default function Privacy() {
             kimliği oluşturulur. Ad ya da e-posta istenmez; skorların ve oyun sonuçların bu kimlikle saklanır.
           </li>
           <li>
-            Google ile giriş yaptıysan Hesap'tan <b>anonim moda</b> geçebilirsin. Geçmiş ve sonraki skorların herkese açık
-            sıralamadan kaldırılır.
+            Google ile giriş yaptığında sıralamada adınla mı görüneceğin, yoksa anonim mi olacağın sorulur. Seçene kadar
+            yeni skorların kaydedilmez; daha önce kaydedilenler olduğu gibi kalır.
+          </li>
+          <li>
+            Seçimini istediğin zaman Hesap'tan değiştirebilirsin. Anonim olunca geçmiş ve sonraki skorların herkese açık
+            sıralamadan kaldırılır; görünür olunca geri gelir.
           </li>
           <li>
             Anonim skorları yalnızca sen görebilirsin; sunucu kuralları başka kullanıcıların onları okumasına izin vermez.

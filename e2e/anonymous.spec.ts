@@ -1,5 +1,5 @@
 import { expect, test, type Browser, type Page } from '@playwright/test';
-import { finish, op, tile, waitForPlay } from './helpers';
+import { choosePrivacy, finish, op, tile, waitForPlay } from './helpers';
 
 // Firebase Emulator Suite gerekir: `npm run emulators` ve `E2E_EMULATORS=1 npm run e2e`
 test.skip(process.env.E2E_EMULATORS !== '1', 'Firebase emülatörleri kapalı');
@@ -40,6 +40,7 @@ async function publicPlayer(browser: Browser, name: string): Promise<Page> {
   await page.goto('/');
   await googleSignIn(page, name);
   await expect(page.locator('.avatar-btn')).toBeVisible();
+  await choosePrivacy(page, 'Görünür');
   await playOne(page);
   await expect(page.locator('.save-note')).toContainText('Skorun kaydedildi', { timeout: 10_000 });
   return page;
@@ -86,7 +87,7 @@ test('a Google player can switch to anonymous mode and back', async ({ browser }
   await page.goto('/');
   await page.locator('.avatar-btn').click();
   await page.getByRole('radio', { name: 'Anonim' }).click();
-  await expect(page.locator('.toast')).toContainText('Anonim moddasın', { timeout: 10_000 });
+  await expect(page.locator('.toast')).toContainText('Anonimsin', { timeout: 10_000 });
   expect(await count(page, 'scores', uid)).toBe(0);
   expect(await count(page, 'privateScores', uid)).toBe(1);
 
@@ -134,4 +135,46 @@ test('an anonymous player can delete their record', async ({ page }) => {
   await expect(page.locator('.toast')).toContainText('Anonim kaydın ve skorların silindi');
   await expect(page.locator('.avatar-btn')).toHaveCount(0);
   expect(await count(page, 'privateScores', uid)).toBe(0);
+});
+
+test('an existing Google user is asked on first entry and can stay hidden', async ({ browser }) => {
+  // Bu özellikten önce kaydolmuş oyuncu: skoru herkese açık, tercihi yok (bilinmiyor)
+  const ctx = await browser.newContext();
+  const page = await ctx.newPage();
+  await page.goto('/');
+  await googleSignIn(page, `Eski Oyuncu ${Date.now()}`);
+  const dialog = page.locator('dialog[open]', { hasText: 'Sıralamada nasıl görünmek istersin?' });
+  await expect(dialog).toBeVisible({ timeout: 10_000 });
+  // Kapatırsa bu oturumda yeniden sorulmaz; oyun sonunda soru ekranın içinde çıkar
+  await dialog.getByRole('button', { name: 'Kapat' }).click();
+  await expect(dialog).toHaveCount(0);
+  await playOne(page);
+  await expect(page.locator('.save-note')).toContainText('Skorun sıralamada nasıl görünsün?', { timeout: 10_000 });
+  await choosePrivacy(page, 'Görünür');
+  await expect(page.locator('.save-note')).toContainText('Skorun kaydedildi.', { timeout: 10_000 });
+  const uid = (await uidOf(page))!;
+  expect(await count(page, 'scores', uid)).toBe(1);
+
+  // Tercihi sil: eski kullanıcı durumu (skor herkese açık, tercih bilinmiyor)
+  await page.request.delete(`${FIRESTORE}/profiles/${uid}`, { headers: { Authorization: 'Bearer owner' } });
+  await page.evaluate(() => localStorage.removeItem('birislem:privacy'));
+  const next = await ctx.newPage();
+  await next.goto('/');
+  const ask = next.locator('dialog[open]', { hasText: 'Sıralamada nasıl görünmek istersin?' });
+  await expect(ask).toBeVisible({ timeout: 10_000 });
+  await choosePrivacy(next, 'Anonim');
+  await expect(ask).toHaveCount(0);
+  expect(await count(next, 'scores', uid)).toBe(0);
+  expect(await count(next, 'privateScores', uid)).toBe(1);
+  await next.locator('.avatar-btn').click();
+  await expect(next.getByRole('radio', { name: 'Anonim' })).toHaveAttribute('aria-checked', 'true');
+});
+
+test('the leaderboard asks for visibility before showing anyone', async ({ page }) => {
+  await page.goto('/leaderboard');
+  await googleSignIn(page, `Kararsız ${Date.now()}`);
+  await expect(page.locator('.save-note--choice')).toContainText('Sıralamada nasıl görünmek istersin?', { timeout: 10_000 });
+  await expect(page.locator('.lb-list')).toHaveCount(0);
+  await choosePrivacy(page, 'Anonim');
+  await expect(page.locator('.lb-anon')).toContainText('Anonim moddasın');
 });

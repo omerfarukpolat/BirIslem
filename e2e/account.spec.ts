@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { finish, op, tile, waitForPlay } from './helpers';
+import { choosePrivacy, finish, op, tile, waitForPlay } from './helpers';
 
 // Firebase Emulator Suite gerekir: `npm run emulators` ve `E2E_EMULATORS=1 npm run e2e`
 test.skip(process.env.E2E_EMULATORS !== '1', 'Firebase emülatörleri kapalı');
@@ -21,6 +21,7 @@ test('a signed-in player can delete the account and all scores', async ({ page }
     return (await signIn(`Silinecek ${Date.now()}`)).user.uid;
   });
   await expect(page.locator('.avatar-btn')).toBeVisible();
+  await choosePrivacy(page, 'Görünür');
 
   await page.goto('/game');
   await waitForPlay(page);
@@ -46,6 +47,7 @@ test('the leaderboard ranks by the sum of the best 20 games by default', async (
   const name = `Sıralama ${Date.now()}`;
   await page.evaluate((n) => (window as unknown as { __emulatorGoogleSignIn: (n: string) => Promise<unknown> }).__emulatorGoogleSignIn(n), name);
   await expect(page.locator('.avatar-btn')).toBeVisible();
+  await choosePrivacy(page, 'Görünür');
 
   let total = 0;
   for (let i = 0; i < 2; i++) {

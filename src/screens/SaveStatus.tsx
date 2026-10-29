@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'preact/hooks';
 import { useLocation } from 'preact-iso';
 import { Icon } from '../components/Icon';
+import { PrivacyChoice } from '../components/PrivacyChoice';
 import { SignInButton } from '../components/SignInButton';
 import { googleSignInAvailable, session } from '../state/auth';
 import { joinAnonymously, player, scoreTarget } from '../state/player';
 import { firebaseEnabled } from '../services/config';
 import type { SaveScoreInput } from '../services/scores';
 
-type State = 'idle' | 'checking' | 'saving' | 'saved' | 'error' | 'duplicate';
+type State = 'idle' | 'checking' | 'ask' | 'saving' | 'saved' | 'error' | 'duplicate';
 
 /**
  * Skoru oyuncu için bir kez kaydeder: Google ile girmişse herkese açık sıralamaya
@@ -40,6 +41,8 @@ export function SaveStatus({ payload }: { payload: Omit<SaveScoreInput, 'uid' | 
         // Kayıt başlamadan oturum değiştiyse yeni çalıştırma karar verir
         if (!alive || saved.current) return;
         if (!target) return setState('idle');
+        // Görünürlük henüz seçilmemiş: önce sor, seçilince bu oyun da kaydedilir
+        if (target === 'ask') return setState('ask');
         saved.current = true;
         setPrivate(target.private);
         setState('saving');
@@ -60,7 +63,7 @@ export function SaveStatus({ payload }: { payload: Omit<SaveScoreInput, 'uid' | 
     return () => {
       alive = false;
     };
-  }, [payload, s?.uid, s?.anonymous, p?.uid, p?.anonymous]);
+  }, [payload, s?.uid, s?.anonymous, p?.uid, p?.privacy]);
 
   if (!firebaseEnabled || !payload) return null;
 
@@ -89,6 +92,17 @@ export function SaveStatus({ payload }: { payload: Omit<SaveScoreInput, 'uid' | 
             {joining ? 'Açılıyor…' : 'Anonim kaydet'}
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (state === 'ask') {
+    return (
+      <div class="save-note save-note--choice">
+        <p>
+          <b>Skorun sıralamada nasıl görünsün?</b> Bir kez seçmen yeterli; istediğin zaman Hesap'tan değiştirebilirsin.
+        </p>
+        <PrivacyChoice />
       </div>
     );
   }

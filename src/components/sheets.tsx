@@ -2,7 +2,7 @@ import { useEffect, useState } from 'preact/hooks';
 import { formatTimeLimit } from '../game/format';
 import { BANDS, LEADERBOARD_BEST_OF, MAX_SCORE, PLACE_BONUS, SPEED_FULL_MS, SPEED_ZERO_MS } from '../game/scoring';
 import { deleteAccount, googleSignInAvailable, prepareReauth, session, signOut } from '../state/auth';
-import { player, setAnonymousMode } from '../state/player';
+import { player, setPrivacy, type Privacy } from '../state/player';
 import { OP_LIMIT_OPTIONS, TIME_OPTIONS, settings, soundOn, theme, type GameSettings, type Theme } from '../state/settings';
 import { Icon } from './Icon';
 import { SignInButton } from './SignInButton';
@@ -172,7 +172,7 @@ export function HowToSheet({ open, onClose }: { open: boolean; onClose: () => vo
   );
 }
 
-const PRIVACY: { value: 'visible' | 'anonymous'; label: string }[] = [
+const PRIVACY: { value: Privacy; label: string }[] = [
   { value: 'visible', label: 'Görünür' },
   { value: 'anonymous', label: 'Anonim' },
 ];
@@ -204,34 +204,32 @@ export function AccountSheet({ open, onClose }: { open: boolean; onClose: () => 
           </div>
 
           <div class="account__privacy">
-            {p.google ? (
+            <Segmented
+              label="Sıralamada görünürlük"
+              value={p.privacy}
+              options={PRIVACY}
+              onChange={async (v) => {
+                if (switching || v === p.privacy) return;
+                setSwitching(true);
+                await setPrivacy(v === 'anonymous');
+                setSwitching(false);
+              }}
+            />
+            <p class="muted">
+              {switching
+                ? 'Kaydediliyor…'
+                : p.privacy === 'anonymous'
+                  ? p.google
+                    ? 'Anonimsin: skorlarını yalnızca sen görürsün, sıralamada da yalnızca kendini görürsün.'
+                    : `Anonimsin: skorlarını yalnızca sen görürsün, sıralamada da yalnızca kendini görürsün.${googleSignInAvailable ? ' Görünür olmak için Google hesabına bağlanırsın.' : ''}`
+                  : p.privacy === 'visible'
+                    ? 'Sıralamada adınla görünürsün. Anonim olursan geçmiş skorların da gizlenir; başkalarını da görmezsin.'
+                    : 'Henüz seçmedin: sıralamada adınla mı görünmek istersin, anonim mi?'}
+            </p>
+            {!p.google && googleSignInAvailable && (
               <>
-                <Segmented
-                  label="Sıralamada görünürlük"
-                  value={p.anonymous ? 'anonymous' : 'visible'}
-                  options={PRIVACY}
-                  onChange={async (v) => {
-                    if (switching || (v === 'anonymous') === p.anonymous) return;
-                    setSwitching(true);
-                    await setAnonymousMode(v === 'anonymous');
-                    setSwitching(false);
-                  }}
-                />
-                <p class="muted">
-                  {switching
-                    ? 'Skorların taşınıyor…'
-                    : p.anonymous
-                      ? 'Anonimsin: skorlarını yalnızca sen görürsün, sıralamada da yalnızca kendini görürsün.'
-                      : 'Sıralamada adınla görünürsün. Anonim olursan geçmiş skorların da gizlenir; başkalarını da görmezsin.'}
-                </p>
-              </>
-            ) : (
-              <>
-                <p class="muted">
-                  Skorlarını yalnızca sen görürsün, sıralamada da yalnızca kendini görürsün.
-                  {googleSignInAvailable && ' Google hesabına bağlarsan skorların korunur, istediğin cihazdan devam edersin.'}
-                </p>
                 <SignInButton class="btn btn--block" label="Google hesabına bağla" />
+                <p class="muted">Bağlarsan skorların korunur ve anonim kalırsın; istediğin cihazdan devam edersin.</p>
               </>
             )}
           </div>
