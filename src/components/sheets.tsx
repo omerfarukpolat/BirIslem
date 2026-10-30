@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'preact/hooks';
 import { formatTimeLimit } from '../game/format';
 import { BANDS, LEADERBOARD_BEST_OF, MAX_SCORE, PLACE_BONUS, SPEED_FULL_MS, SPEED_ZERO_MS } from '../game/scoring';
-import { deleteAccount, prepareReauth, signOut, user } from '../state/auth';
+import { deleteAccount, googleSignInAvailable, prepareReauth, session, signOut } from '../state/auth';
+import { player, setPrivacy, type Privacy } from '../state/player';
 import { OP_LIMIT_OPTIONS, TIME_OPTIONS, settings, soundOn, theme, type GameSettings, type Theme } from '../state/settings';
 import { Icon } from './Icon';
+import { SignInButton } from './SignInButton';
 import { Segmented, Sheet } from './ui';
 import './sheets.css';
 
@@ -170,41 +172,87 @@ export function HowToSheet({ open, onClose }: { open: boolean; onClose: () => vo
   );
 }
 
+const PRIVACY: { value: Privacy; label: string }[] = [
+  { value: 'visible', label: 'Görünür' },
+  { value: 'anonymous', label: 'Anonim' },
+];
+
 export function AccountSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const u = user.value;
+  const p = player.value;
+  const s = session.value;
   const [confirming, setConfirming] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [switching, setSwitching] = useState(false);
 
   useEffect(() => {
-    if (open && u) prepareReauth();
+    if (open && p?.google) prepareReauth();
     if (!open) setConfirming(false);
-  }, [open, u]);
+  }, [open, p?.google]);
 
   return (
     <Sheet open={open} onClose={onClose} title="Hesap">
-      {u ? (
+      {p ? (
         <div class="account">
-          <Avatar name={u.name} photo={u.photoURL} size={56} />
+          {p.google ? <Avatar name={p.name} photo={s?.photoURL ?? null} size={56} /> : <Avatar anonymous size={56} />}
           <div>
-            <p class="account__name">{u.name}</p>
-            {u.email && <p class="muted">{u.email}</p>}
+            <p class="account__name">{p.google ? p.name : 'Anonim oyuncu'}</p>
+            {p.google ? (
+              s?.email && <p class="muted">{s.email}</p>
+            ) : (
+              <p class="muted">Google hesabı olmadan, bu cihazda kayıtlısın.</p>
+            )}
           </div>
-          <button
-            type="button"
-            class="btn btn--block"
-            onClick={async () => {
-              await signOut();
-              onClose();
-            }}
-          >
-            <Icon name="logout" />
-            Çıkış yap
-          </button>
+
+          <div class="account__privacy">
+            <Segmented
+              label="Sıralamada görünürlük"
+              value={p.privacy}
+              options={PRIVACY}
+              onChange={async (v) => {
+                if (switching || v === p.privacy) return;
+                setSwitching(true);
+                await setPrivacy(v === 'anonymous');
+                setSwitching(false);
+              }}
+            />
+            <p class="muted">
+              {switching
+                ? 'Kaydediliyor…'
+                : p.privacy === 'anonymous'
+                  ? p.google
+                    ? 'Anonimsin: skorlarını yalnızca sen görürsün, sıralamada da yalnızca kendini görürsün.'
+                    : `Anonimsin: skorlarını yalnızca sen görürsün, sıralamada da yalnızca kendini görürsün.${googleSignInAvailable ? ' Görünür olmak için Google hesabına bağlanırsın.' : ''}`
+                  : p.privacy === 'visible'
+                    ? 'Sıralamada adınla görünürsün. Anonim olursan geçmiş skorların da gizlenir; başkalarını da görmezsin.'
+                    : 'Henüz seçmedin: sıralamada adınla mı görünmek istersin, anonim mi?'}
+            </p>
+            {!p.google && googleSignInAvailable && (
+              <>
+                <SignInButton class="btn btn--block" label="Google hesabına bağla" />
+                <p class="muted">Bağlarsan skorların korunur ve anonim kalırsın; istediğin cihazdan devam edersin.</p>
+              </>
+            )}
+          </div>
+
+          {p.google && (
+            <button
+              type="button"
+              class="btn btn--block"
+              onClick={async () => {
+                await signOut();
+                onClose();
+              }}
+            >
+              <Icon name="logout" />
+              Çıkış yap
+            </button>
+          )}
           {confirming ? (
             <div class="account__danger" role="alert">
               <p>
-                Hesabın ve sıralamadaki bütün skorların kalıcı olarak silinir. Gerekirse Google seni bir kez daha
-                doğrular.
+                {p.google
+                  ? 'Hesabın ve bütün skorların kalıcı olarak silinir. Gerekirse Google seni bir kez daha doğrular.'
+                  : 'Anonim kaydın ve bütün skorların kalıcı olarak silinir.'}
               </p>
               <div class="confirm-actions">
                 <button type="button" class="btn" onClick={() => setConfirming(false)} disabled={busy}>
@@ -221,14 +269,14 @@ export function AccountSheet({ open, onClose }: { open: boolean; onClose: () => 
                     if (ok) onClose();
                   }}
                 >
-                  {busy ? 'Siliniyor…' : 'Hesabı sil'}
+                  {busy ? 'Siliniyor…' : p.google ? 'Hesabı sil' : 'Kaydı sil'}
                 </button>
               </div>
             </div>
           ) : (
             <p class="account__links">
               <button type="button" class="link-btn" onClick={() => setConfirming(true)}>
-                Hesabımı sil
+                {p.google ? 'Hesabımı sil' : 'Anonim kaydımı sil'}
               </button>
               <a href="/gizlilik" onClick={onClose}>
                 Gizlilik
@@ -243,11 +291,28 @@ export function AccountSheet({ open, onClose }: { open: boolean; onClose: () => 
   );
 }
 
-export function Avatar({ name, photo, size = 36 }: { name: string; photo: string | null; size?: number }) {
+export function Avatar({
+  name = '',
+  photo = null,
+  size = 36,
+  anonymous = false,
+}: {
+  name?: string;
+  photo?: string | null;
+  size?: number;
+  /** Anonim oyuncu: ad ya da fotoğraf yerine simge */
+  anonymous?: boolean;
+}) {
   const initial = (name.trim()[0] ?? '?').toLocaleUpperCase('tr-TR');
   return (
-    <span class="avatar" style={{ width: size, height: size, fontSize: size * 0.45 }}>
-      {photo ? <img src={photo} alt="" referrerpolicy="no-referrer" width={size} height={size} /> : initial}
+    <span class={`avatar${anonymous ? ' avatar--anon' : ''}`} style={{ width: size, height: size, fontSize: size * 0.45 }}>
+      {anonymous ? (
+        <Icon name="user" size={Math.round(size * 0.55)} />
+      ) : photo ? (
+        <img src={photo} alt="" referrerpolicy="no-referrer" width={size} height={size} />
+      ) : (
+        initial
+      )}
     </span>
   );
 }

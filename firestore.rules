@@ -32,6 +32,31 @@ service cloud.firestore {
       allow delete: if signedIn() && resource.data.userId == request.auth.uid;
     }
 
+    function owner(data) {
+      return signedIn() && data.userId == request.auth.uid;
+    }
+
+    // ---------- Anonim oyuncuların skorları ----------
+    // Yalnızca sahibi okur: başka hiç kimse (giriş yapmış olsa bile) göremez, listeleyemez.
+    match /privateScores/{scoreId} {
+      allow read: if owner(resource.data);
+      // Google ile girmiş ya da anonim oturum açmış oyuncu kendi adına yazar. Belgeler
+      // herkese açık sıralamadan da taşınabildiği için alanlar yalnızca sahiplik ve
+      // günün sorusunun tek hakkı açısından denetlenir.
+      allow create: if owner(request.resource.data)
+        && (!scoreId.matches('daily_.*') || scoreId == 'daily_' + request.resource.data.puzzleId + '_' + request.auth.uid);
+      allow update: if false;
+      allow delete: if owner(resource.data);
+    }
+
+    // ---------- Oyuncu tercihleri (anonim mod) ----------
+    match /profiles/{uid} {
+      allow read, delete: if signedIn() && uid == request.auth.uid;
+      allow create, update: if signedIn() && uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['anonymous', 'updatedAt'])
+        && request.resource.data.anonymous is bool;
+    }
+
     // ---------- Çevrimiçi odalar ----------
     function roomPath(code) {
       return /databases/$(database)/documents/rooms/$(code);

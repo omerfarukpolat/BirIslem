@@ -1,5 +1,6 @@
 import { useEffect } from 'preact/hooks';
 import { ErrorBoundary, LocationProvider, Route, Router, lazy, useLocation } from 'preact-iso';
+import { PrivacyPrompt } from './components/PrivacyChoice';
 import Home from './screens/Home';
 import Solo from './screens/Solo';
 import { toastMessage } from './state/toast';
@@ -50,6 +51,7 @@ export function App() {
           <Route default component={NotFound} />
         </Router>
       </ErrorBoundary>
+      <PrivacyPrompt />
       <Toaster />
     </LocationProvider>
   );

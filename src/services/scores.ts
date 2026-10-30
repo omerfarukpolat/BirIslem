@@ -1,12 +1,42 @@
-import { Timestamp, addDoc, collection, doc, getDocs, query, setDoc, where, writeBatch } from 'firebase/firestore';
-import { sumOfBest } from '../game/scoring';
+import {
+  Timestamp,
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  where,
+  writeBatch,
+  type DocumentData,
+  type QueryDocumentSnapshot,
+} from 'firebase/firestore';
+import {
+  aggregate,
+  dailyEntries,
+  periodStart,
+  SCORE_VERSION,
+  userStats,
+  type DailyEntry,
+  type LeaderboardEntry,
+  type LeaderboardPeriod,
+  type ScoreRow,
+  type UserStats,
+} from '../lib/leaderboard';
 import type { SimpleStep } from '../game/types';
 import { firestore } from './db';
 
-/** Yeni puanlama sistemiyle kaydedilen skorlar. Eski kayıtlar (v yok) sıralamaya girmez. */
-export const SCORE_VERSION = 2;
+export { periodStart, SCORE_VERSION };
+export type { DailyEntry, LeaderboardEntry, LeaderboardPeriod, UserStats };
 
-export type LeaderboardPeriod = 'daily' | 'weekly' | 'monthly';
+/** Herkese açık sıralama */
+const PUBLIC = 'scores';
+/** Anonim oyuncuların skorları: kurallar gereği yalnızca sahibi okuyabilir */
+const PRIVATE = 'privateScores';
+/** Oyuncu tercihleri (anonim mod); yalnızca sahibi okur ve yazar */
+const PROFILES = 'profiles';
 
 export interface SaveScoreInput {
   uid: string;
@@ -25,41 +55,19 @@ export interface SaveScoreInput {
   puzzleId?: string;
 }
 
-export interface LeaderboardEntry {
-  userId: string;
-  userName: string;
-  /** Dönemin en iyi 20 oyununun toplamı: varsayılan sıralama */
-  bestOfScore: number;
-  totalScore: number;
-  gamesPlayed: number;
-  averageScore: number;
-  bestScore: number;
-  exact: number;
+export interface Profile {
+  /** Anonim oyuncu: skorları başkasına görünmez, sıralamada yalnızca kendini görür */
+  anonymous: boolean;
 }
 
-export interface DailyEntry {
-  userId: string;
-  userName: string;
-  score: number;
-  diff: number | null;
-  value: number | null;
-  timeUsedMs: number | null;
-}
+const toRow = (d: QueryDocumentSnapshot<DocumentData>): ScoreRow => {
+  const s = d.data();
+  return { ...(s as Omit<ScoreRow, 'createdAtMs'>), createdAtMs: s.createdAt instanceof Timestamp ? s.createdAt.toMillis() : 0 };
+};
 
-interface ScoreDoc {
-  v?: number;
-  mode?: string;
-  userId: string;
-  userName: string;
-  score: number;
-  diff?: number | null;
-  userResult?: number | null;
-  timeUsedMs?: number | null;
-  puzzleId?: string;
-  createdAt: Timestamp;
-}
+const ownDocs = (name: string, uid: string) => getDocs(query(collection(firestore(), name), where('userId', '==', uid)));
 
-export async function saveScore(s: SaveScoreInput): Promise<void> {
+export async function saveScore(s: SaveScoreInput, opts: { private: boolean }): Promise<void> {
   const data = {
     v: SCORE_VERSION,
     mode: s.mode,
@@ -84,7 +92,7 @@ export async function saveScore(s: SaveScoreInput): Promise<void> {
     ...(s.puzzleId ? { puzzleId: s.puzzleId } : {}),
     createdAt: Timestamp.now(),
   };
-  const col = collection(firestore(), 'scores');
+  const col = collection(firestore(), opts.private ? PRIVATE : PUBLIC);
   if (s.mode === 'daily' && s.puzzleId) {
     // Günde tek hak: belge kimliği sabit, kurallar yalnızca oluşturmaya izin verir.
     await setDoc(doc(col, `daily_${s.puzzleId}_${s.uid}`), data);
@@ -93,105 +101,80 @@ export async function saveScore(s: SaveScoreInput): Promise<void> {
   }
 }
 
-export function periodStart(period: LeaderboardPeriod, now = new Date()): Date {
-  switch (period) {
-    case 'daily':
-      return new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    case 'weekly': {
-      const day = now.getDay();
-      const back = day === 0 ? 6 : day - 1;
-      return new Date(now.getFullYear(), now.getMonth(), now.getDate() - back);
-    }
-    case 'monthly':
-      return new Date(now.getFullYear(), now.getMonth(), 1);
-  }
-}
-
 export async function fetchLeaderboard(period: LeaderboardPeriod): Promise<LeaderboardEntry[]> {
-  const q = query(collection(firestore(), 'scores'), where('createdAt', '>=', Timestamp.fromDate(periodStart(period))));
-  const snap = await getDocs(q);
-  const byUser = new Map<string, LeaderboardEntry>();
-  const scoresOf = new Map<string, number[]>();
-  snap.forEach((d) => {
-    const s = d.data() as ScoreDoc;
-    if (s.v !== SCORE_VERSION || typeof s.score !== 'number') return;
-    const e = byUser.get(s.userId) ?? {
-      userId: s.userId,
-      userName: s.userName,
-      bestOfScore: 0,
-      totalScore: 0,
-      gamesPlayed: 0,
-      averageScore: 0,
-      bestScore: 0,
-      exact: 0,
-    };
-    e.totalScore += s.score;
-    e.gamesPlayed += 1;
-    e.bestScore = Math.max(e.bestScore, s.score);
-    if (s.diff === 0) e.exact += 1;
-    e.userName = s.userName || e.userName;
-    byUser.set(s.userId, e);
-    scoresOf.set(s.userId, [...(scoresOf.get(s.userId) ?? []), s.score]);
-  });
-  return [...byUser.values()].map((e) => ({
-    ...e,
-    bestOfScore: sumOfBest(scoresOf.get(e.userId) ?? []),
-    averageScore: Math.round(e.totalScore / e.gamesPlayed),
-  }));
+  const since = periodStart(period);
+  const snap = await getDocs(query(collection(firestore(), PUBLIC), where('createdAt', '>=', Timestamp.fromDate(since))));
+  return aggregate(snap.docs.map(toRow), since.getTime());
 }
 
 export async function fetchDaily(puzzleId: string): Promise<DailyEntry[]> {
-  const q = query(collection(firestore(), 'scores'), where('puzzleId', '==', puzzleId));
-  const snap = await getDocs(q);
-  const rows: DailyEntry[] = [];
-  snap.forEach((d) => {
-    const s = d.data() as ScoreDoc;
-    if (s.v !== SCORE_VERSION) return;
-    rows.push({
-      userId: s.userId,
-      userName: s.userName,
-      score: s.score,
-      diff: s.diff ?? null,
-      value: s.userResult ?? null,
-      timeUsedMs: s.timeUsedMs ?? null,
-    });
-  });
-  return rows.sort(
-    (a, b) => b.score - a.score || (a.diff ?? 1e9) - (b.diff ?? 1e9) || (a.timeUsedMs ?? 1e9) - (b.timeUsedMs ?? 1e9),
-  );
+  const snap = await getDocs(query(collection(firestore(), PUBLIC), where('puzzleId', '==', puzzleId)));
+  return dailyEntries(snap.docs.map(toRow), puzzleId);
 }
 
-export interface UserStats {
-  games: number;
-  total: number;
-  best: number;
-  average: number;
-  exact: number;
+export interface OwnBoard {
+  period: (p: LeaderboardPeriod) => LeaderboardEntry[];
+  daily: (puzzleId: string) => DailyEntry[];
+  stats: UserStats;
 }
 
-/** Hesap silinirken kullanıcının bütün skor kayıtları (eski sürümdekiler dahil) silinir. */
-export async function deleteUserScores(uid: string): Promise<void> {
+/** Anonim oyuncunun sıralaması: yalnızca kendi kayıtları */
+export async function fetchOwnBoard(uid: string): Promise<OwnBoard> {
+  const rows = (await ownDocs(PRIVATE, uid)).docs.map(toRow);
+  return {
+    period: (p) => aggregate(rows, periodStart(p).getTime()),
+    daily: (puzzleId) => dailyEntries(rows, puzzleId),
+    stats: userStats(rows),
+  };
+}
+
+export async function fetchUserStats(uid: string, opts: { private: boolean }): Promise<UserStats> {
+  // Bileşik indeks gerektirmesin diye yalnızca eşitlik filtresi; gerisi istemcide.
+  return userStats((await ownDocs(opts.private ? PRIVATE : PUBLIC, uid)).docs.map(toRow));
+}
+
+export async function fetchProfile(uid: string): Promise<Profile | null> {
+  const snap = await getDoc(doc(firestore(), PROFILES, uid));
+  return snap.exists() ? { anonymous: snap.data().anonymous === true } : null;
+}
+
+export async function saveProfile(uid: string, profile: Profile): Promise<void> {
+  await setDoc(doc(firestore(), PROFILES, uid), { anonymous: profile.anonymous, updatedAt: Timestamp.now() });
+}
+
+/**
+ * Oyuncunun skorlarını herkese açık ve gizli koleksiyonlar arasında taşır.
+ * Hedefte aynı kimlikle belge varsa (günün sorusu) hedefteki kalır. Gizliden
+ * açığa yalnızca yeni puanlama sistemindeki kayıtlar taşınır; eski biçimdeki
+ * kayıtlar (eskiden e-posta da içeriyordu) gizli kalır.
+ */
+export async function moveScores(uid: string, toPrivate: boolean): Promise<number> {
   const db = firestore();
-  const snap = await getDocs(query(collection(db, 'scores'), where('userId', '==', uid)));
-  for (let i = 0; i < snap.docs.length; i += 400) {
+  const [from, to] = toPrivate ? [PUBLIC, PRIVATE] : [PRIVATE, PUBLIC];
+  const [source, existing] = await Promise.all([ownDocs(from, uid), ownDocs(to, uid)]);
+  const taken = new Set(existing.docs.map((d) => d.id));
+  const docs = source.docs.filter((d) => toPrivate || d.data().v === SCORE_VERSION);
+  // Her belge için iki işlem; toplu yazma 500 işlemle sınırlı
+  for (let i = 0; i < docs.length; i += 200) {
     const batch = writeBatch(db);
-    for (const d of snap.docs.slice(i, i + 400)) batch.delete(d.ref);
+    for (const d of docs.slice(i, i + 200)) {
+      if (!taken.has(d.id)) batch.set(doc(db, to, d.id), d.data());
+      batch.delete(d.ref);
+    }
     await batch.commit();
   }
+  return docs.length;
 }
 
-export async function fetchUserStats(uid: string): Promise<UserStats> {
-  // Bileşik indeks gerektirmesin diye yalnızca eşitlik filtresi; gerisi istemcide.
-  const snap = await getDocs(query(collection(firestore(), 'scores'), where('userId', '==', uid)));
-  const out: UserStats = { games: 0, total: 0, best: 0, average: 0, exact: 0 };
-  snap.forEach((d) => {
-    const s = d.data() as ScoreDoc;
-    if (s.v !== SCORE_VERSION) return;
-    out.games += 1;
-    out.total += s.score;
-    out.best = Math.max(out.best, s.score);
-    if (s.diff === 0) out.exact += 1;
-  });
-  out.average = out.games ? Math.round(out.total / out.games) : 0;
-  return out;
+/** Hesap silinirken: iki koleksiyondaki bütün skorlar (eski sürümdekiler dahil) ve profil */
+export async function deleteUserData(uid: string): Promise<void> {
+  const db = firestore();
+  const snaps = await Promise.all([ownDocs(PUBLIC, uid), ownDocs(PRIVATE, uid)]);
+  const refs = snaps.flatMap((s) => s.docs.map((d) => d.ref));
+  for (let i = 0; i < refs.length; i += 400) {
+    const batch = writeBatch(db);
+    for (const ref of refs.slice(i, i + 400)) batch.delete(ref);
+    await batch.commit();
+  }
+  await deleteDoc(doc(db, PROFILES, uid));
 }

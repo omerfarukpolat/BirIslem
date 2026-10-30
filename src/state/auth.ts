@@ -13,6 +13,8 @@ export interface AppUser {
 
 /** Firebase oturumu (anonim olabilir: çevrimiçi odalar için) */
 export const session = signal<AppUser | null>(null);
+/** Oturum durumu ilk kez belli oldu mu (oturum yoksa da) */
+export const authReady = signal(!firebaseEnabled);
 /** Giriş düğmesine basılabilir mi: Google penceresi tıklamayla hemen açılabilecek durumda */
 export const signInReady = signal(!firebaseEnabled);
 /**
@@ -21,7 +23,7 @@ export const signInReady = signal(!firebaseEnabled);
  * Oyun, sıralama ve çevrimiçi odalar girişsiz çalışır.
  */
 export const googleSignInAvailable = firebaseEnabled && appShell !== 'ios';
-/** Google ile giriş yapmış gerçek kullanıcı: skorlar yalnızca bunun için kaydedilir */
+/** Google ile giriş yapmış kullanıcı (anonim modda olabilir, bkz. state/player.ts) */
 export const user = computed(() => (session.value && !session.value.anonymous ? session.value : null));
 
 let started = false;
@@ -69,7 +71,7 @@ export function initAuth(eager = false) {
     service()
       .then((m) => {
         // Android uygulaması yönlendirmeli giriş kullanır: dönüşteki hatayı göster
-        if (appShell === 'android') m.finishRedirect().catch(reportSignInError);
+        if (appShell === 'android') m.finishRedirect().catch((err) => err instanceof m.SwitchedAccount || reportSignInError(err));
         return m;
       })
       .then(({ watchAuth }) =>
@@ -83,9 +85,13 @@ export function initAuth(eager = false) {
                 anonymous: u.isAnonymous,
               }
             : null;
+          authReady.value = true;
         }),
       )
-      .catch((err) => console.warn('Firebase Auth yüklenemedi', err));
+      .catch((err) => {
+        console.warn('Firebase Auth yüklenemedi', err);
+        authReady.value = true;
+      });
   if (eager) run();
   else whenIdle(run);
 }
@@ -133,7 +139,11 @@ function reportSignInError(err: unknown): void {
   }
 }
 
-export async function signIn(): Promise<boolean> {
+/**
+ * Google ile giriş. Anonim oturum varsa Google hesabına bağlanır (kimlik ve skorlar
+ * korunur); Google hesabı daha önce kaydedilmişse o hesaba geçilir: 'switched'.
+ */
+export async function signIn(): Promise<'ok' | 'switched' | false> {
   if (!googleSignInAvailable) return false;
   initAuth(true);
   try {
@@ -142,8 +152,13 @@ export async function signIn(): Promise<boolean> {
     const m = loaded ?? (await service());
     // Android uygulamasında (TWA) açılır pencere ayrı bir Chrome sekmesine düşebiliyor;
     // giriş sayfası sitenin kendi alan adındaysa sayfa içi yönlendirme daha sağlam.
-    await m.googleSignIn(appShell === 'android' && m.firstPartyAuthDomain());
-    return true;
+    try {
+      await m.googleSignIn(appShell === 'android' && m.firstPartyAuthDomain());
+    } catch (err) {
+      if (err instanceof m.SwitchedAccount) return 'switched';
+      throw err;
+    }
+    return 'ok';
   } catch (err) {
     reportSignInError(err);
     return false;
@@ -156,19 +171,20 @@ export function prepareReauth(): void {
 }
 
 /**
- * Hesabı ve sıralamadaki bütün skorları siler (mağazaların istediği hesap silme).
- * Tıklamayla çağrılmalı: gerekirse önce Google kimlik doğrulama penceresi açılır.
+ * Hesabı, bütün skorları ve tercihleri siler (mağazaların istediği hesap silme).
+ * Tıklamayla çağrılmalı: Google hesabında gerekirse önce kimlik doğrulama penceresi açılır.
  */
 export async function deleteAccount(): Promise<boolean> {
-  const m = loaded;
   const u = session.peek();
-  if (!m || !u || u.anonymous) return false;
+  const m = loaded ?? (u?.anonymous ? await service() : null);
+  if (!m || !u) return false;
   try {
-    if (!m.recentlySignedIn()) await m.reauthenticate();
-    const { deleteUserScores } = await import('../services/scores');
-    await deleteUserScores(u.uid);
-    await m.deleteCurrentUser();
-    toast('Hesabın ve skorların silindi.', 5000);
+    if (!u.anonymous && !m.recentlySignedIn()) await m.reauthenticate();
+    const { deleteUserData } = await import('../services/scores');
+    await deleteUserData(u.uid);
+    if (u.anonymous) await m.deleteAnonymousUser();
+    else await m.deleteCurrentUser();
+    toast(u.anonymous ? 'Anonim kaydın ve skorların silindi.' : 'Hesabın ve skorların silindi.', 5000);
     return true;
   } catch (err) {
     const code = (err as { code?: string }).code;
@@ -186,7 +202,7 @@ export async function signOut(): Promise<void> {
   await signOutUser();
 }
 
-/** Çevrimiçi oda için kimlik: giriş yapılmışsa o, yoksa anonim oturum. */
+/** Çevrimiçi oda ve anonim kayıt için kimlik: giriş yapılmışsa o, yoksa anonim oturum. */
 export async function ensureSession(displayName: string): Promise<AppUser> {
   if (!firebaseEnabled) throw new Error('firebase-disabled');
   initAuth(true);
@@ -206,7 +222,8 @@ export async function ensureSession(displayName: string): Promise<AppUser> {
   if (u.isAnonymous) await svc.setDisplayName(displayName);
   return {
     uid: u.uid,
-    name: u.isAnonymous ? displayName : u.displayName || displayName,
+    // Odada oyuncunun seçtiği ad görünür (anonim modda Google adı görünmesin)
+    name: displayName,
     email: u.email,
     photoURL: u.photoURL,
     anonymous: u.isAnonymous,
