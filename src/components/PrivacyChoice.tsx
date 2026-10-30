@@ -3,6 +3,7 @@ import { useLocation } from 'preact-iso';
 import { readJSON, safeSession, writeJSON } from '../lib/storage';
 import { session } from '../state/auth';
 import { confirmedUid, knownLocally, loadProfile, player, setPrivacy } from '../state/player';
+import { toast } from '../state/toast';
 import { Icon } from './Icon';
 import { Sheet } from './ui';
 import './privacy-choice.css';
@@ -37,6 +38,8 @@ export function PrivacyChoice({ onChosen }: { onChosen?: () => void }) {
 }
 
 const LATER_KEY = 'birislem:privacy-later';
+/** Okuma hatası bu oturumda bir kez söylenir */
+let reported = false;
 
 /**
  * Görünürlüğünü henüz seçmemiş Google kullanıcısına (bu özellikten önce kaydolan
@@ -50,12 +53,23 @@ export function PrivacyPrompt() {
   const confirmed = confirmedUid.value;
   const [later, setLater] = useState<string | null>(() => readJSON<string | null>(LATER_KEY, null, safeSession()));
 
-  // Tercih cihazda bilinmiyorsa sunucuya sor (bilinen tercih için Firestore yüklenmez)
+  // Tercih cihazda bilinmiyorsa sunucuya sor (bilinen tercih için Firestore yüklenmez).
+  // Okunamazsa sessiz kalmaz; ana sayfaya her dönüşte yeniden dener.
   useEffect(() => {
-    if (!s || s.anonymous || knownLocally(s.uid)) return;
-    const t = setTimeout(() => loadProfile(s.uid, true).catch(() => {}), 300);
+    if (!s || s.anonymous || path !== '/' || knownLocally(s.uid)) return;
+    const t = setTimeout(
+      () =>
+        loadProfile(s.uid, true).catch((err) => {
+          const code = (err as { code?: string }).code;
+          console.warn('Görünürlük tercihi okunamadı', err);
+          if (reported) return;
+          reported = true;
+          toast(`Sıralama tercihin yüklenemedi; biraz sonra tekrar dene.${code ? ` (${code})` : ''}`, 7000);
+        }),
+      300,
+    );
     return () => clearTimeout(t);
-  }, [s?.uid, s?.anonymous]);
+  }, [s?.uid, s?.anonymous, path]);
 
   const open = path === '/' && !!s && !s.anonymous && confirmed === s.uid && p?.privacy === 'unknown' && later !== s.uid;
   const close = () => {
